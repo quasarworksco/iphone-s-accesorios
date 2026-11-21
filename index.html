@@ -60,12 +60,15 @@
     .skip { position: absolute; top: .5rem; left: .5rem; z-index: 3; transform: translateY(-150%); background: var(--text); color: var(--background); padding: .6rem; }
     .skip:focus { transform: none; }
     .icon { width: 1.2em; height: 1.2em; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-    .site-header { border-bottom: 1px solid var(--line); }
+    .site-header { color: #f7faf9; background: #101211; border-bottom: 1px solid #303b35; }
+    .site-header .nav { color: #c8d4cf; }
+    .site-header .nav a:hover { color: #fff; }
+    .site-header .button { border-color: #52655c; }
+    .site-header .button:hover { border-color: #bfe4d8; color: #e0fff5; }
+    .site-header :focus-visible { outline-color: #bfe4d8; }
     .header-inner, .brand, .nav, .actions, .contact-links { display: flex; align-items: center; gap: 1rem; }
     .header-inner { min-height: 75px; justify-content: space-between; flex-wrap: wrap; padding-block: .7rem; }
-    .brand { gap: .7rem; font-weight: 700; line-height: 1.05; }
-    .brand img { width: 48px; height: 48px; border-radius: 50%; }
-    .brand span span { display: block; margin-top: .25rem; color: var(--muted); font-size: .73rem; font-weight: 500; }
+    .brand img { width: 88px; height: auto; }
     .nav { color: var(--muted); font-size: .9rem; flex-wrap: wrap; }
     .nav a { display: inline-flex; min-height: 44px; align-items: center; }
     .nav a:hover, .contact-links a:hover { color: var(--accent); }
@@ -96,11 +99,18 @@
     h2 { font-size: clamp(3rem, 6vw, 5rem); }
     .filters { display: flex; gap: .55rem; flex-wrap: wrap; margin-bottom: 1.4rem; }
     .filter { background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: .48rem .95rem; min-height: 44px; cursor: pointer; }
+    .filter { white-space: nowrap; }
     .filter:hover { border-color: var(--accent); color: var(--text); }
     .filter[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: var(--background); }
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
     .products { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 225px), 1fr)); }
     .product { min-width: 0; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: .85rem; overflow: hidden; background: var(--surface); }
+    @supports (animation-timeline: view()) {
+      @media (prefers-reduced-motion: no-preference) {
+        .product { animation: reveal linear both; animation-timeline: view(); animation-range: entry 0% entry 72%; }
+        @keyframes reveal { from { opacity: .84; transform: translateY(.6rem); } to { opacity: 1; transform: translateY(0); } }
+      }
+    }
     .product img { aspect-ratio: 4 / 3; object-fit: cover; border-bottom: 1px solid var(--line); }
     .product-body { display: flex; flex: 1; flex-direction: column; align-items: flex-start; padding: 1.05rem; }
     .product h3 { font-size: 1.07rem; font-weight: 700; }
@@ -127,8 +137,12 @@
       h1 { text-wrap: wrap; }
     }
     @media (max-width: 480px) {
-      .header-inner { row-gap: .45rem; }
-      .nav { order: 3; flex-basis: 100%; }
+      .header-inner { row-gap: .35rem; column-gap: .5rem; }
+      .brand img { width: 76px; }
+      .site-header .button { padding-inline: .75rem; }
+      .nav { order: 3; flex-basis: 100%; gap: 1.2rem; border-top: 1px solid #303b35; }
+      .filters { gap: .35rem; }
+      .filter { padding-inline: .65rem; font-size: .85rem; }
     }
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
@@ -145,8 +159,7 @@
   <header class="site-header">
     <div class="wrap header-inner">
       <a class="brand" href="#" aria-label="Iphone’s accesorios, inicio">
-        <img src="assets/logo.jpg" alt="" width="48" height="48">
-        <span>Iphone’s<span>accesorios</span></span>
+        <img src="assets/logo-transparente.webp" alt="" width="420" height="260">
       </a>
       <nav class="nav" aria-label="Navegación principal">
         <a href="#catalogo">Catálogo</a>

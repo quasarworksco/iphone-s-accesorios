@@ -4,54 +4,75 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
-  <title>Editar catálogo | Iphone’s accesorios</title>
-  <style>
-    @font-face { font-family: Manrope; src: url("../assets/fonts/manrope-latin-wght-normal.woff2") format("woff2"); font-weight: 400 800; font-display: swap; }
-    * { box-sizing: border-box; }
-    body { margin: auto; max-width: 62rem; padding: 2rem 1rem 4rem; color: #192126; background: #f6f7f8; font: 1rem/1.55 Manrope, system-ui, sans-serif; }
-    h1 { margin: .5rem 0; font-size: clamp(2rem, 6vw, 3.6rem); line-height: 1.1; letter-spacing: -.045em; }
-    a { color: #245750; }
-    .actions { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin-block: .9rem; }
-    button, input, select, textarea { font: inherit; color: inherit; }
-    button, .action { background: #fff; border: 1px solid #abbab9; padding: .5rem .85rem; min-height: 44px; border-radius: .55rem; cursor: pointer; }
-    button[type="submit"], #publish { background: #245750; color: #fff; border-color: #245750; }
-    button:disabled { opacity: .55; cursor: default; }
-    fieldset { min-inline-size: 0; margin: 0 0 1rem; border: 1px solid #abbab9; padding: 1rem; background: #fff; border-radius: .7rem; }
-    legend { font-weight: 800; padding-inline: .4rem; }
-    .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: .9rem; }
-    label { display: grid; align-content: start; gap: .3rem; }
-    input, select, textarea { min-height: 44px; min-width: 0; width: 100%; border: 1px solid #abbab9; border-radius: .4rem; background: #fff; padding: .5rem; }
-    textarea { resize: vertical; }
-    :focus-visible { outline: 2px solid #245750; outline-offset: 3px; }
-    [hidden] { display: none !important; }
-  </style>
+  <meta name="theme-color" content="#f6f7f8">
+  <title>Administración | Iphone’s accesorios</title>
+  <link rel="stylesheet" href="panel.css">
 </head>
 <body>
-  <a href="../">Volver a la tienda</a>
-  <h1>Editar catálogo</h1>
-  <p>Edita los productos, sus precios en USD, la tasa en bolívares y las cantidades en stock. Puedes descargar el catálogo para subirlo a GitHub o publicarlo con una cuenta de Google autorizada.</p>
-  <div class="actions">
-    <button type="button" id="sign-in">Conectar con Google</button>
-    <button type="button" id="sign-out" hidden>Cerrar sesión</button>
-    <a class="action" href="https://github.com/quasarworksco/iphone-s-accesorios/upload/main">Subir a GitHub</a>
-  </div>
-  <p id="connection" role="status"></p>
-  <label>Importar catálogo JSON <input type="file" id="import" accept=".json,application/json"></label>
-  <form id="editor" hidden>
-    <p>La tienda calcula los precios en bolívares con esta tasa. Deja el stock en blanco para mostrar «Consultar disponibilidad» o escribe 0 para marcar el producto como agotado.</p>
-    <label for="exchange-rate">Tasa del día en bolívares por US$1
-      <input id="exchange-rate" type="number" min="0" step="any" inputmode="decimal" aria-describedby="rate-help">
-    </label>
-    <p id="rate-help">Introduce una tasa mayor que cero. Puedes dejarla en blanco si aún no la tienes.</p>
-    <p id="inventory" role="status"></p>
-    <div id="products"></div>
-    <div class="actions">
-      <button type="button" id="add">Añadir producto</button>
-      <button type="submit">Descargar catálogo</button>
-      <button type="submit" id="publish" hidden>Publicar en la tienda</button>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="../" aria-label="Iphone’s accesorios, inicio"><img src="../assets/logo-transparente.webp" alt="" width="420" height="260"></a>
+      <nav aria-label="Secciones del panel">
+        <a href="#resumen">Resumen</a>
+        <a href="#productos">Productos</a>
+        <a href="#archivos">Archivos</a>
+      </nav>
+      <a class="back" href="../">Ver tienda</a>
     </div>
-  </form>
-  <p id="status" role="status"></p>
+  </header>
+  <main class="wrap">
+    <header class="intro">
+      <h1>Administración</h1>
+      <p>Gestiona el catálogo, la tasa del día y las existencias de tu tienda.</p>
+    </header>
+    <p id="notice" class="notice" role="status" hidden></p>
+    <form id="editor" hidden>
+      <section id="resumen" class="overview" aria-labelledby="summary-title">
+        <div class="section-heading">
+          <h2 id="summary-title">Resumen</h2>
+          <span id="catalog-source"></span>
+        </div>
+        <div class="overview-grid">
+          <div class="rate-panel">
+            <h3>Tasa del día</h3>
+            <label for="exchange-rate">Bolívares por US$1</label>
+            <div class="rate-entry"><span>Bs.</span><input id="exchange-rate" type="number" min="0" step="any" inputmode="decimal" placeholder="0,00" aria-describedby="rate-help"></div>
+            <p id="rate-help">La tasa convierte automáticamente los precios en USD a bolívares.</p>
+          </div>
+          <dl id="inventory" class="inventory">
+            <div><dt>Productos</dt><dd data-stat="products">0</dd></div>
+            <div><dt>Unidades en stock</dt><dd data-stat="total">0</dd></div>
+            <div><dt>Agotados</dt><dd data-stat="soldOut">0</dd></div>
+            <div><dt>Sin stock registrado</dt><dd data-stat="unknown">0</dd></div>
+          </dl>
+        </div>
+      </section>
+      <section id="productos" aria-labelledby="products-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="products-title">Productos</h2>
+            <p>El stock en blanco queda como «Consultar disponibilidad». Usa 0 para «Agotado».</p>
+          </div>
+          <button type="button" id="add" class="primary">Añadir producto</button>
+        </div>
+        <p id="empty" hidden>El catálogo está vacío. Añade un producto para empezar.</p>
+        <div id="products"></div>
+      </section>
+      <section id="archivos" aria-labelledby="files-title">
+        <div class="section-heading"><h2 id="files-title">Archivos del catálogo</h2></div>
+        <div class="file-panel">
+          <p>Guarda un borrador en este navegador o exporta el archivo para publicar los cambios.</p>
+          <div class="actions">
+            <button type="submit" id="save" class="primary">Guardar borrador</button>
+            <button type="submit" id="export">Exportar catálogo</button>
+            <label class="file-button">Importar catálogo <input type="file" id="import" accept=".json,application/json"></label>
+            <button type="button" id="restore" class="quiet">Restaurar versión pública</button>
+          </div>
+          <p id="status" role="status"></p>
+        </div>
+      </section>
+    </form>
+  </main>
   <script type="module" src="editor.js"></script>
 </body>
 </html>

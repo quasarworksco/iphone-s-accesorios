@@ -1,21 +1,18 @@
-import { bundledCatalog, categories, validateCatalog } from '../datos-catalogo.js';
-import { connectAdmin, publishedCatalog } from '../firebase-catalogo.js';
+import { bundledCatalog, categories, isCatalogImage, validateCatalog } from '../datos-catalogo.js';
+import { publishedCatalog } from '../firebase-catalogo.js';
 
 const form = document.querySelector('#editor');
 const list = document.querySelector('#products');
 const status = document.querySelector('#status');
-const connection = document.querySelector('#connection');
-const publish = document.querySelector('#publish');
-const signIn = document.querySelector('#sign-in');
-const signOut = document.querySelector('#sign-out');
+const notice = document.querySelector('#notice');
+const source = document.querySelector('#catalog-source');
 const inventory = document.querySelector('#inventory');
+const exchangeRate = document.querySelector('#exchange-rate');
 const count = new Intl.NumberFormat('es-VE');
 const money = new Intl.NumberFormat('es-VE', { maximumFractionDigits: 2 });
-const exchangeRate = document.querySelector('#exchange-rate');
-let admin;
-let authorized = false;
+const draftKey = 'iphone-accesorios/catalogo-borrador';
 let dirty = false;
-let cloudLoaded = false;
+let uploads = 0;
 
 const fields = [
   { key: 'name', label: 'Nombre', max: 100, required: true },
@@ -23,8 +20,93 @@ const fields = [
   { key: 'description', label: 'Descripción', max: 300 },
   { key: 'priceUsd', label: 'Precio en USD', step: '0.01' },
   { key: 'stock', label: 'Unidades en stock', step: '1', max: Number.MAX_SAFE_INTEGER },
-  { key: 'image', label: 'Ruta en assets o URL de Cloudinary', max: 400, required: true }
+  { key: 'image', label: 'Enlace de la imagen o ruta en assets', max: 400, required: true }
 ];
+
+function photoControls(imageField) {
+  const header = document.createElement('div');
+  header.className = 'product-heading';
+  const preview = document.createElement('img');
+  preview.className = 'preview';
+  preview.alt = '';
+  preview.loading = 'lazy';
+  const feedback = document.createElement('p');
+  feedback.className = 'product-feedback';
+  feedback.setAttribute('role', 'status');
+
+  function refreshPreview() {
+    preview.hidden = !isCatalogImage(imageField.value);
+    if (!preview.hidden) preview.src = new URL(imageField.value, new URL('../', import.meta.url));
+  }
+  preview.addEventListener('error', () => {
+    preview.hidden = true;
+    feedback.textContent = 'No se pudo previsualizar la imagen. Revisa el enlace.';
+  });
+  imageField.addEventListener('change', () => {
+    feedback.textContent = '';
+    refreshPreview();
+  });
+  refreshPreview();
+
+  const drop = document.createElement('label');
+  drop.className = 'drop';
+  drop.textContent = 'Cargar imagen';
+  const hint = document.createElement('small');
+  hint.textContent = 'Selecciona o arrastra una foto';
+  const input = document.createElement('input');
+  input.type = 'file';
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
+  input.accept = allowedTypes.join(',');
+  drop.append(hint, input);
+  header.append(preview, drop);
+
+  async function upload(image) {
+    if (!image || input.disabled) return;
+    if (!allowedTypes.includes(image.type) || image.size > 10 * 1024 * 1024) {
+      feedback.textContent = 'Selecciona una imagen JPG, PNG, WebP o AVIF de hasta 10 MB.';
+      input.value = '';
+      return;
+    }
+    uploads += 1;
+    input.disabled = true;
+    drop.setAttribute('aria-busy', 'true');
+    feedback.textContent = 'Cargando imagen…';
+    try {
+      const body = new FormData();
+      body.set('file', image);
+      body.set('upload_preset', 'iphoneac');
+      const response = await fetch('https://api.cloudinary.com/v1_1/do4fpfwlb/image/upload', {
+        method: 'POST', body, signal: AbortSignal.timeout(30000)
+      });
+      if (!response.ok) throw new Error();
+      const { secure_url } = await response.json();
+      if (!isCatalogImage(secure_url)) throw new Error();
+      imageField.value = secure_url;
+      refreshPreview();
+      dirty = true;
+      feedback.textContent = 'Imagen cargada. El enlace ya está en el producto.';
+    } catch {
+      feedback.textContent = 'No se pudo cargar la imagen. Vuelve a intentarlo o pega el enlace.';
+    } finally {
+      uploads -= 1;
+      input.value = '';
+      input.disabled = false;
+      drop.removeAttribute('aria-busy');
+    }
+  }
+  input.addEventListener('change', () => upload(input.files[0]));
+  drop.addEventListener('dragover', (event) => {
+    event.preventDefault();
+    drop.dataset.over = '';
+  });
+  drop.addEventListener('dragleave', () => delete drop.dataset.over);
+  drop.addEventListener('drop', (event) => {
+    event.preventDefault();
+    delete drop.dataset.over;
+    upload(event.dataTransfer.files[0]);
+  });
+  return { header, feedback };
+}
 
 function addProduct(product = {}) {
   const row = document.createElement('fieldset');
@@ -40,12 +122,11 @@ function addProduct(product = {}) {
     const input = document.createElement(tag);
     input.name = field.key;
     if (tag === 'select') {
-      for (const [value, text] of Object.entries(categories)) {
-        input.add(new Option(text, value));
-      }
+      for (const [value, text] of Object.entries(categories)) input.add(new Option(text, value));
     } else if (field.step) {
       input.type = 'number';
       input.min = '0';
+      input.inputMode = field.key === 'stock' ? 'numeric' : 'decimal';
       input.step = field.step;
       if (field.max) input.max = field.max;
     } else {
@@ -56,71 +137,40 @@ function addProduct(product = {}) {
     label.append(input);
     controls.append(label);
   }
-
+  const { header, feedback } = photoControls(controls.querySelector('[name=image]'));
+  controls.querySelector('[name=name]').addEventListener('input', (event) => {
+    legend.textContent = event.target.value.trim() || 'Nuevo producto';
+  });
+  const converted = document.createElement('p');
+  converted.className = 'converted-price';
   const actions = document.createElement('div');
   actions.className = 'actions';
   const remove = document.createElement('button');
   remove.type = 'button';
   remove.textContent = 'Quitar producto';
   remove.addEventListener('click', () => {
+    if (row.querySelector('[aria-busy=true]')) return;
     row.remove();
     updateInventory();
     dirty = true;
     document.querySelector('#add').focus();
   });
-  const upload = document.createElement('label');
-  upload.className = 'cloud-upload';
-  upload.hidden = !authorized;
-  upload.textContent = 'Subir foto a Cloudinary';
-  const file = document.createElement('input');
-  file.type = 'file';
-  file.accept = 'image/jpeg,image/png,image/webp,image/avif';
-  file.addEventListener('change', async () => {
-    const image = file.files[0];
-    if (!image || !authorized) return;
-    if (!['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(image.type) || image.size > 10 * 1024 * 1024) {
-      status.textContent = 'Elige una foto JPG, PNG, WebP o AVIF de hasta 10 MB.';
-      file.value = '';
-      return;
-    }
-    file.disabled = true;
-    status.textContent = 'Subiendo foto…';
-    try {
-      const body = new FormData();
-      body.set('file', image);
-      body.set('upload_preset', 'iphoneac');
-      const response = await fetch('https://api.cloudinary.com/v1_1/do4fpfwlb/image/upload', { method: 'POST', body });
-      if (!response.ok) throw new Error();
-      const { secure_url } = await response.json();
-      row.querySelector('[name=image]').value = secure_url;
-      dirty = true;
-      status.textContent = 'Foto subida. Publica o descarga el catálogo para guardar el cambio.';
-    } catch {
-      status.textContent = 'Cloudinary no aceptó la subida. Revisa el preset o pega la URL de la foto.';
-    } finally {
-      file.value = '';
-      file.disabled = false;
-    }
-  });
-  upload.append(file);
-  actions.append(remove, upload);
-  const converted = document.createElement('p');
-  converted.className = 'converted-price';
-  row.append(legend, controls, converted, actions);
+  actions.append(remove);
+  row.append(legend, header, controls, converted, feedback, actions);
   list.append(row);
   return row;
 }
 
-function showCatalog(catalog) {
+function showCatalog(catalog, label) {
   list.replaceChildren();
   exchangeRate.value = catalog.exchangeRate ?? '';
   for (const product of catalog.products) addProduct(product);
+  source.textContent = label;
   form.hidden = false;
   updateInventory();
   updateConversions();
 }
 
-const initialCatalog = bundledCatalog().then(showCatalog).catch(error => { status.textContent = error.message; });
 function updateInventory() {
   let total = 0n;
   let unknown = 0;
@@ -128,20 +178,19 @@ function updateInventory() {
   const stocks = [...list.querySelectorAll('[name=stock]')];
   for (const input of stocks) {
     const value = input.valueAsNumber;
-    if (!input.validity.valid || !Number.isSafeInteger(value)) {
-      unknown += 1;
-    } else if (value === 0) {
-      soldOut += 1;
-    } else {
-      total += BigInt(value);
-    }
+    if (!input.validity.valid || !Number.isSafeInteger(value)) unknown += 1;
+    else if (value === 0) soldOut += 1;
+    else total += BigInt(value);
   }
-  inventory.textContent = `${count.format(stocks.length)} productos · ${count.format(total)} unidades registradas · ${count.format(soldOut)} agotados · ${count.format(unknown)} sin stock registrado`;
+  for (const [key, value] of Object.entries({ products: stocks.length, total, soldOut, unknown })) {
+    inventory.querySelector(`[data-stat=${key}]`).textContent = count.format(value);
+  }
+  document.querySelector('#empty').hidden = stocks.length > 0;
 }
 
 function updateConversions() {
   const rate = exchangeRate.valueAsNumber;
-  exchangeRate.setCustomValidity(exchangeRate.value !== '' && rate <= 0 ? 'Ingresa una tasa mayor que cero.' : '');
+  exchangeRate.setCustomValidity(exchangeRate.value !== '' && (rate <= 0 || rate >= 1e15) ? 'Ingresa una tasa positiva válida.' : '');
   for (const row of list.children) {
     const usd = row.querySelector('[name=priceUsd]').valueAsNumber;
     const total = usd * rate;
@@ -150,17 +199,51 @@ function updateConversions() {
   }
 }
 
+function getDraft() {
+  try {
+    const saved = localStorage.getItem(draftKey);
+    return saved ? validateCatalog(JSON.parse(saved)) : null;
+  } catch {
+    return null;
+  }
+}
+
+const bundle = bundledCatalog();
+const remote = publishedCatalog().then((data) => data === null ? null : validateCatalog(data)).catch(() => null);
+const draft = getDraft();
+if (draft) {
+  showCatalog(draft, 'Borrador local');
+  bundle.catch(() => {});
+} else {
+  bundle.then((catalog) => showCatalog(catalog, 'Catálogo del sitio')).catch(() => {
+    notice.textContent = 'No se pudo cargar el catálogo del sitio. Puedes empezar con un catálogo vacío o importar un archivo.';
+    notice.hidden = false;
+    showCatalog(validateCatalog([]), 'Catálogo nuevo');
+  }).then(async () => {
+    const catalog = await remote;
+    if (catalog && !dirty && !uploads) {
+      notice.hidden = true;
+      showCatalog(catalog, 'Catálogo publicado');
+    }
+  });
+}
+
 form.addEventListener('input', (event) => {
+  if (event.target.type === 'file') return;
   dirty = true;
   if (event.target.name === 'stock') updateInventory();
   if (event.target === exchangeRate || event.target.name === 'priceUsd') updateConversions();
 });
+
 document.querySelector('#add').addEventListener('click', () => {
   if (list.children.length >= 100) {
-    status.textContent = 'El catálogo admite hasta 100 productos.';
+    notice.textContent = 'El catálogo admite hasta 100 productos.';
+    notice.hidden = false;
     return;
   }
-  addProduct().querySelector('input').focus();
+  const row = addProduct();
+  row.classList.add('product-new');
+  row.querySelector('[name=name]').focus();
   updateInventory();
   dirty = true;
 });
@@ -169,10 +252,10 @@ document.querySelector('#import').addEventListener('change', async (event) => {
   const file = event.target.files[0];
   if (!file) return;
   try {
+    if (uploads) throw new Error('Espera a que terminen de cargar las imágenes.');
     const catalog = validateCatalog(JSON.parse(await file.text()));
     if (dirty && !window.confirm('¿Reemplazar los cambios del editor con este archivo?')) return;
-    await initialCatalog;
-    showCatalog(catalog);
+    showCatalog(catalog, 'Catálogo importado');
     dirty = true;
     status.textContent = 'Catálogo importado.';
   } catch (error) {
@@ -182,9 +265,32 @@ document.querySelector('#import').addEventListener('change', async (event) => {
   }
 });
 
-form.addEventListener('submit', async (event) => {
+document.querySelector('#restore').addEventListener('click', async (event) => {
+  if (uploads) {
+    status.textContent = 'Espera a que terminen de cargar las imágenes.';
+    return;
+  }
+  if ((dirty || getDraft()) && !window.confirm('¿Descartar el borrador y restaurar el catálogo público?')) return;
+  const button = event.currentTarget;
+  button.disabled = true;
+  try {
+    const catalog = await Promise.race([remote, new Promise(resolve => setTimeout(() => resolve(null), 4000))]);
+    const next = catalog ?? await bundledCatalog();
+    localStorage.removeItem(draftKey);
+    showCatalog(next, catalog ? 'Catálogo publicado' : 'Catálogo del sitio');
+    dirty = false;
+    status.textContent = 'Versión pública restaurada.';
+  } catch {
+    status.textContent = 'No se pudo restaurar el catálogo público.';
+  } finally {
+    button.disabled = false;
+  }
+});
+
+form.addEventListener('submit', (event) => {
   event.preventDefault();
   try {
+    if (uploads) throw new Error('Espera a que terminen de cargar las imágenes.');
     const products = [...list.children].map(row => {
       const product = { price: row.dataset.legacyPrice };
       for (const { key, step } of fields) {
@@ -197,83 +303,23 @@ form.addEventListener('submit', async (event) => {
       exchangeRate: exchangeRate.value === '' ? null : exchangeRate.valueAsNumber,
       products
     });
-    if (event.submitter === publish) {
-      if (!authorized || !cloudLoaded) return;
-      publish.disabled = true;
-      status.textContent = 'Publicando catálogo…';
-      await admin.publish(catalog);
-      dirty = false;
-      status.textContent = 'Catálogo publicado en la tienda.';
+    const contents = JSON.stringify(catalog, null, 2) + '\n';
+    if (event.submitter?.id !== 'export') {
+      localStorage.setItem(draftKey, contents);
+      source.textContent = 'Borrador local';
+      dirty = true;
+      status.textContent = 'Borrador guardado en este navegador.';
       return;
     }
-    const file = new Blob([JSON.stringify(catalog, null, 2) + '\n'], { type: 'application/json' });
+    const file = new Blob([contents], { type: 'application/json' });
     const url = URL.createObjectURL(file);
     const link = document.createElement('a');
     link.href = url;
     link.download = 'catalogo.json';
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    status.textContent = 'Archivo descargado. Súbelo a la raíz del repositorio para actualizar el catálogo de GitHub.';
+    status.textContent = 'Archivo descargado. Está listo para publicar.';
   } catch (error) {
-    status.textContent = error.code ? `Firebase rechazó la publicación (${error.code}).` : error.message;
-  } finally {
-    publish.disabled = false;
+    status.textContent = error.message;
   }
 });
-
-signIn.addEventListener('click', async () => {
-  signIn.disabled = true;
-  connection.textContent = 'Conectando con Firebase…';
-  try {
-    admin = await connectAdmin();
-    if (!observer) observer = admin.onUser(updateUser);
-    await admin.signIn();
-  } catch {
-    connection.textContent = 'No se pudo iniciar sesión con Google. Puedes descargar el catálogo y usar GitHub.';
-  } finally {
-    signIn.disabled = false;
-  }
-});
-signOut.addEventListener('click', async () => {
-  try {
-    await admin.signOut();
-  } catch {
-    connection.textContent = 'No se pudo cerrar la sesión.';
-  }
-});
-
-let observer;
-let authVersion = 0;
-async function updateUser(user) {
-  const version = ++authVersion;
-  signIn.hidden = Boolean(user);
-  signOut.hidden = !user;
-  authorized = false;
-  cloudLoaded = false;
-  publish.hidden = true;
-  for (const control of list.querySelectorAll('.cloud-upload')) control.hidden = true;
-  if (!user) {
-    connection.textContent = 'Sesión de Google cerrada.';
-    return;
-  }
-  try {
-    if (!await admin.isAdmin(user.uid)) {
-      if (version === authVersion) connection.textContent = 'Esta cuenta necesita autorización de administración en Firebase.';
-      return;
-    }
-    await initialCatalog;
-    const catalog = await publishedCatalog();
-    if (version !== authVersion) return;
-    if (catalog !== null && (!dirty || window.confirm('¿Reemplazar el borrador con el catálogo publicado?'))) {
-      showCatalog(validateCatalog(catalog));
-      dirty = false;
-    }
-    authorized = true;
-    cloudLoaded = true;
-    publish.hidden = false;
-    for (const control of list.querySelectorAll('.cloud-upload')) control.hidden = false;
-    connection.textContent = 'Sesión autorizada. Publica desde aquí para actualizar el catálogo de Firestore.';
-  } catch {
-    if (version === authVersion) connection.textContent = 'Firebase no pudo comprobar el acceso o leer el catálogo. Puedes exportar el archivo para GitHub.';
-  }
-}

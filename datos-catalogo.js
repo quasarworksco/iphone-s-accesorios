@@ -4,6 +4,13 @@ export const categories = {
   energia: 'Energía'
 };
 
+export function isCatalogImage(image) {
+  return typeof image === 'string' && image.length <= 400 && (
+    /^assets\/[\w/-]+\.(?:webp|avif|jpe?g|png)$/i.test(image) ||
+    /^https:\/\/res\.cloudinary\.com\/[\w/-]+(?:\.[\w]+)?(?:\?[\w=&%-]+)?$/i.test(image)
+  );
+}
+
 export function validateCatalog(data) {
   const { products, exchangeRate = null } = Array.isArray(data) ? { products: data } : data ?? {};
   if (exchangeRate !== null && (!Number.isFinite(exchangeRate) || exchangeRate <= 0 || exchangeRate >= 1e15)) {
@@ -15,13 +22,9 @@ export function validateCatalog(data) {
 
   const validatedProducts = products.map((product, index) => {
     const { name, description, category, image, price = '', priceUsd = null, stock = null } = product ?? {};
-    const validImage = typeof image === 'string' && image.length <= 400 && (
-      /^assets\/[\w/-]+\.(?:webp|avif|jpe?g|png)$/i.test(image) ||
-      /^https:\/\/res\.cloudinary\.com\/[\w/-]+(?:\.[\w]+)?(?:\?[\w=&%-]+)?$/i.test(image)
-    );
     if (typeof name !== 'string' || !name.trim() || name.length > 100 ||
         typeof description !== 'string' || description.length > 300 ||
-        typeof category !== 'string' || !Object.hasOwn(categories, category) || !validImage ||
+        typeof category !== 'string' || !Object.hasOwn(categories, category) || !isCatalogImage(image) ||
         typeof price !== 'string' || price.length > 60 ||
         (priceUsd !== null && (!Number.isFinite(priceUsd) || priceUsd < 0 ||
           (exchangeRate !== null && !Number.isFinite(priceUsd * exchangeRate)))) ||

@@ -1,0 +1,99 @@
+@font-face {
+  font-family: Manrope;
+  src: url("../assets/fonts/manrope-latin-wght-normal.woff2") format("woff2");
+  font-weight: 400 800;
+  font-display: swap;
+}
+:root {
+  --paper: #f6f7f8;
+  --white: #fff;
+  --ink: #192126;
+  --muted: #485b60;
+  --line: #cbd8d7;
+  --green: #245750;
+  --deep: #143e37;
+  --mint: #e3efea;
+  --round: .9rem;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; }
+body { margin: 0; color: var(--ink); background: var(--paper); font: 1rem/1.55 Manrope, system-ui, sans-serif; }
+.wrap { width: min(calc(100% - 2rem), 1180px); margin-inline: auto; }
+.topbar { color: #f7faf9; background: #101211; border-bottom: 1px solid #303b35; }
+.topbar :focus-visible { outline-color: #bfe4d8; }
+.topbar-inner, nav, .brand, .section-heading, .actions, .product-heading { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; }
+.topbar-inner { justify-content: space-between; min-height: 70px; padding-block: .6rem; }
+nav a, .back, .brand { min-height: 44px; display: inline-flex; align-items: center; color: #c8d4cf; font-weight: 750; text-decoration: none; }
+nav a:hover, .back:hover { text-decoration: underline; text-underline-offset: .25em; }
+.brand { color: #f7faf9; }
+.brand img { width: 88px; height: auto; }
+main { padding-bottom: 4rem; }
+.intro { padding-block: clamp(2.2rem, 5vw, 4rem) clamp(1.6rem, 3vw, 2.6rem); }
+h1, h2, h3, p, dl, dd { margin: 0; }
+h1, h2 { letter-spacing: -.05em; line-height: 1.12; font-weight: 800; }
+h1 { font-size: clamp(2.3rem, 6vw, 4.4rem); }
+h2 { font-size: clamp(1.65rem, 4vw, 2.35rem); }
+h3 { font-size: 1.05rem; }
+.intro p, .section-heading p, #catalog-source, #rate-help, .file-panel p { color: var(--muted); }
+.intro p, .section-heading p { margin-top: .4rem; }
+section + section { margin-top: clamp(2rem, 5vw, 4rem); }
+.section-heading { justify-content: space-between; margin-bottom: 1rem; }
+.overview-grid, #products { display: grid; gap: 1rem; }
+.rate-panel, .file-panel, fieldset, .inventory > div { border: 1px solid var(--line); border-radius: var(--round); background: var(--white); }
+.rate-panel, .file-panel, fieldset { padding: clamp(1rem, 2.4vw, 1.5rem); }
+.rate-panel { background: var(--mint); }
+.rate-panel label { margin-top: .6rem; }
+.rate-entry { display: flex; align-items: center; border: 1px solid var(--line); border-radius: .55rem; overflow: hidden; background: var(--white); }
+.rate-entry span { padding-inline: .7rem; font-weight: 800; color: var(--green); }
+.rate-entry input { border: 0; border-radius: 0; font-size: 1.5rem; font-weight: 800; }
+.rate-entry:focus-within { outline: 2px solid var(--green); outline-offset: 2px; }
+#rate-help { font-size: .86rem; margin-top: .52rem; }
+.inventory { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; }
+.inventory > div { display: flex; flex-direction: column-reverse; justify-content: center; padding: .75rem 1rem; }
+.inventory dt { font-size: .84rem; color: var(--muted); }
+.inventory dd { font-size: clamp(1.35rem, 5vw, 2rem); font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; }
+fieldset { min-inline-size: 0; margin: 0; }
+fieldset legend { padding: .22rem .65rem; max-width: 100%; overflow-wrap: anywhere; border: 1px solid var(--line); border-radius: .5rem; background: var(--white); font-weight: 800; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
+.fields label:nth-last-child(1), .fields label:nth-child(3) { grid-column: 1 / -1; }
+label { display: grid; align-content: start; gap: .35rem; font-size: .88rem; font-weight: 750; }
+button, input, select, textarea { font: inherit; color: inherit; }
+input, select, textarea { min-height: 44px; min-width: 0; width: 100%; border: 1px solid var(--line); border-radius: .5rem; background: var(--white); padding: .55rem .65rem; }
+textarea { resize: vertical; }
+button, .file-button { position: relative; display: inline-flex; justify-content: center; align-items: center; min-height: 44px; border: 1px solid var(--line); border-radius: .55rem; background: var(--white); padding: .55rem .85rem; font-size: .88rem; font-weight: 800; cursor: pointer; }
+.primary { background: var(--green); color: var(--white); border-color: var(--green); }
+.primary:hover { background: var(--deep); }
+button:not(.primary):hover, .file-button:hover { border-color: var(--green); color: var(--green); }
+button:disabled { opacity: .6; cursor: wait; }
+.quiet { background: transparent; }
+:focus-visible, .file-button:focus-within, .drop:focus-within { outline: 2px solid var(--green); outline-offset: 3px; }
+.file-button input, .drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.product-heading { align-items: stretch; margin-bottom: 1rem; }
+.preview { width: 88px; height: 82px; border: 1px solid var(--line); border-radius: .65rem; object-fit: cover; background: var(--mint); }
+.drop { position: relative; flex: 1; min-width: min(100%, 160px); display: grid; place-content: center; text-align: center; border: 1px dashed var(--green); border-radius: .65rem; padding: .7rem; color: var(--green); background: var(--paper); }
+.drop small { font-weight: 500; color: var(--muted); }
+.drop:hover, .drop[data-over] { background: var(--mint); }
+.drop[aria-busy="true"] input { pointer-events: none; }
+.product-feedback, .converted-price { margin-top: .55rem; color: var(--green); font-size: .875rem; font-weight: 750; }
+.product-feedback:empty, .converted-price:empty, #status:empty { display: none; }
+.actions { margin-top: .9rem; }
+#status { margin-top: .75rem; }
+.notice { color: var(--deep); background: var(--mint); padding: .9rem; border-radius: .55rem; margin-bottom: 1rem; }
+@media (min-width: 760px) {
+  .overview-grid { grid-template-columns: .9fr 1.1fr; }
+  #products { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .brand img { width: 76px; }
+  nav { order: 3; flex-basis: 100%; gap: 1.2rem; border-top: 1px solid #303b35; }
+  .fields { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .intro, .overview, .product-new { animation: enter .32s ease-out both; }
+  .overview { animation-delay: .06s; }
+  button, .drop { transition: background .17s ease, border-color .17s ease, transform .17s ease; }
+  button:active { transform: translateY(1px); }
+  @keyframes enter { from { opacity: 0; transform: translateY(8px); } }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

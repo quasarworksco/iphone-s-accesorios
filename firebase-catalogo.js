@@ -26,18 +26,3 @@ export async function publishedCatalog() {
   const snapshot = await firestore.getDoc(ref);
   return snapshot.exists() ? snapshot.data() : null;
 }
-
-export async function connectAdmin() {
-  const [{ app, db, firestore, ref }, authSDK] = await Promise.all([
-    openCatalog(),
-    import(`${sdk}/firebase-auth.js`)
-  ]);
-  const auth = authSDK.getAuth(app);
-  return {
-    signIn: () => authSDK.signInWithPopup(auth, new authSDK.GoogleAuthProvider()),
-    signOut: () => authSDK.signOut(auth),
-    onUser: (callback) => authSDK.onAuthStateChanged(auth, callback),
-    publish: (catalog) => firestore.setDoc(ref, { ...catalog, updatedAt: firestore.serverTimestamp() }),
-    isAdmin: async (uid) => (await firestore.getDoc(firestore.doc(db, 'administradores', uid))).exists()
-  };
-}
