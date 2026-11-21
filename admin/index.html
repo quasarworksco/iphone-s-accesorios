@@ -55,6 +55,11 @@
           </div>
           <button type="button" id="add" class="primary">Añadir producto</button>
         </div>
+        <label class="product-search" for="product-search">
+          Buscar por nombre
+          <input id="product-search" type="search" placeholder="Ej. cables, AirPods o mini UPS" autocomplete="off" aria-controls="products">
+        </label>
+        <p id="search-results" role="status"></p>
         <p id="empty" hidden>El catálogo está vacío. Añade un producto para empezar.</p>
         <div id="products"></div>
       </section>

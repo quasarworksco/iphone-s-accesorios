@@ -3,6 +3,8 @@ import { publishedCatalog } from '../firebase-catalogo.js';
 
 const form = document.querySelector('#editor');
 const list = document.querySelector('#products');
+const search = document.querySelector('#product-search');
+const searchResults = document.querySelector('#search-results');
 const status = document.querySelector('#status');
 const notice = document.querySelector('#notice');
 const source = document.querySelector('#catalog-source');
@@ -109,10 +111,15 @@ function photoControls(imageField) {
 }
 
 function addProduct(product = {}) {
-  const row = document.createElement('fieldset');
+  const row = document.createElement('details');
+  row.className = 'product-editor';
   row.dataset.legacyPrice = product.price ?? '';
-  const legend = document.createElement('legend');
-  legend.textContent = product.name || 'Nuevo producto';
+  const summary = document.createElement('summary');
+  const title = document.createElement('strong');
+  title.textContent = product.name || 'Nuevo producto';
+  const category = document.createElement('span');
+  category.textContent = categories[product.category ?? 'carga'];
+  summary.append(title, category);
   const controls = document.createElement('div');
   controls.className = 'fields';
   for (const field of fields) {
@@ -139,7 +146,13 @@ function addProduct(product = {}) {
   }
   const { header, feedback } = photoControls(controls.querySelector('[name=image]'));
   controls.querySelector('[name=name]').addEventListener('input', (event) => {
-    legend.textContent = event.target.value.trim() || 'Nuevo producto';
+    title.textContent = event.target.value.trim() || 'Nuevo producto';
+  });
+  controls.querySelector('[name=category]').addEventListener('change', (event) => {
+    category.textContent = categories[event.target.value];
+  });
+  row.addEventListener('toggle', () => {
+    if (!row.open && search.value) filterProducts();
   });
   const converted = document.createElement('p');
   converted.className = 'converted-price';
@@ -152,11 +165,15 @@ function addProduct(product = {}) {
     if (row.querySelector('[aria-busy=true]')) return;
     row.remove();
     updateInventory();
+    filterProducts();
     dirty = true;
     document.querySelector('#add').focus();
   });
   actions.append(remove);
-  row.append(legend, header, controls, converted, feedback, actions);
+  const contents = document.createElement('div');
+  contents.className = 'product-fields';
+  contents.append(header, controls, converted, feedback, actions);
+  row.append(summary, contents);
   list.append(row);
   return row;
 }
@@ -169,7 +186,43 @@ function showCatalog(catalog, label) {
   form.hidden = false;
   updateInventory();
   updateConversions();
+  filterProducts();
 }
+
+function searchKey(value) {
+  return value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('es').trim();
+}
+
+function filterProducts() {
+  const query = searchKey(search.value);
+  let matches = 0;
+  for (const row of list.children) {
+    const name = row.querySelector('[name=name]').value;
+    row.hidden = !searchKey(name).includes(query);
+    if (!row.hidden) matches += 1;
+  }
+  searchResults.textContent = !query ? '' : matches === 0 ? 'No se encontraron productos con ese nombre.' :
+    matches === 1 ? '1 producto encontrado' : `${count.format(matches)} productos encontrados`;
+}
+
+search.addEventListener('input', filterProducts);
+search.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') event.preventDefault();
+});
+
+let firstInvalid;
+form.addEventListener('invalid', (event) => {
+  if (firstInvalid) return;
+  firstInvalid = event.target;
+  queueMicrotask(() => { firstInvalid = null; });
+  const row = event.target.closest('.product-editor');
+  if (!row) return;
+  if (row.hidden) {
+    search.value = '';
+    filterProducts();
+  }
+  row.open = true;
+}, true);
 
 function updateInventory() {
   let total = 0n;
@@ -241,7 +294,10 @@ document.querySelector('#add').addEventListener('click', () => {
     notice.hidden = false;
     return;
   }
+  search.value = '';
   const row = addProduct();
+  filterProducts();
+  row.open = true;
   row.classList.add('product-new');
   row.querySelector('[name=name]').focus();
   updateInventory();
