@@ -26,6 +26,15 @@
       <p>Gestiona el catálogo, la tasa del día y las existencias de tu tienda.</p>
     </header>
     <p id="notice" class="notice" role="status" hidden></p>
+    <section id="access" class="file-panel" hidden aria-labelledby="access-title">
+      <h2 id="access-title">Autorizar este navegador</h2>
+      <p>En Firestore, crea un documento en <code>administradores</code> con este ID. Después verifica el acceso.</p>
+      <p><code id="editor-uid" tabindex="0"></code></p>
+      <div class="actions">
+        <button type="button" id="copy-uid">Copiar ID</button>
+        <button type="button" id="check-access">Verificar acceso</button>
+      </div>
+    </section>
     <form id="editor" hidden>
       <section id="resumen" class="overview" aria-labelledby="summary-title">
         <div class="section-heading">
@@ -45,6 +54,11 @@
             <div><dt>Agotados</dt><dd data-stat="soldOut">0</dd></div>
             <div><dt>Sin stock registrado</dt><dd data-stat="unknown">0</dd></div>
           </dl>
+        </div>
+        <div class="actions publish-actions">
+          <button type="submit" id="save" class="primary" disabled>Guardar y publicar</button>
+          <button type="button" id="recover" hidden>Recuperar edición anterior</button>
+          <p id="publish-status" role="status"></p>
         </div>
       </section>
       <section id="productos" aria-labelledby="products-title">
@@ -66,12 +80,11 @@
       <section id="archivos" aria-labelledby="files-title">
         <div class="section-heading"><h2 id="files-title">Archivos del catálogo</h2></div>
         <div class="file-panel">
-          <p>Guarda un borrador en este navegador o exporta el archivo para publicar los cambios.</p>
+          <p>Exporta una copia del catálogo o importa un archivo. Usa «Guardar y publicar» para aplicar los cambios en la tienda.</p>
           <div class="actions">
-            <button type="submit" id="save" class="primary">Guardar borrador</button>
             <button type="submit" id="export">Exportar catálogo</button>
             <label class="file-button">Importar catálogo <input type="file" id="import" accept=".json,application/json"></label>
-            <button type="button" id="restore" class="quiet">Restaurar versión pública</button>
+            <button type="button" id="restore" class="quiet">Recargar catálogo publicado</button>
           </div>
           <p id="status" role="status"></p>
         </div>

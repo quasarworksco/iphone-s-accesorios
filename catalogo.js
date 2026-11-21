@@ -1,5 +1,5 @@
 import { bundledCatalog, validateCatalog } from './datos-catalogo.js';
-import { publishedCatalog } from './firebase-catalogo.js';
+import { watchCatalog } from './firebase-catalogo.js';
 
 const filters = document.querySelector('.filters');
 const grid = document.querySelector('.products');
@@ -76,23 +76,33 @@ filters.addEventListener('click', (event) => {
 });
 
 message.textContent = 'Cargando catálogo…';
-const localCatalog = bundledCatalog().then((catalog) => {
+function showCatalog(catalog) {
   ({ products, exchangeRate } = catalog);
   filters.hidden = false;
   render();
+}
+
+const localCatalog = bundledCatalog();
+let live = false;
+localCatalog.then(catalog => {
+  if (!live) showCatalog(catalog);
 }).catch(() => {
-  message.textContent = 'Consulta el catálogo por WhatsApp en la sección de contacto.';
+  if (!live) message.textContent = 'Consulta el catálogo por WhatsApp en la sección de contacto.';
 });
 
-publishedCatalog().then(async (catalog) => {
-  if (catalog === null) return;
-  const published = validateCatalog(catalog);
-  await localCatalog;
-  ({ products, exchangeRate } = published);
-  filters.hidden = false;
-  render();
-}).catch(() => {
-  // El archivo publicado con GitHub mantiene el catálogo disponible.
-});
+watchCatalog(data => {
+  if (data === null) {
+    live = false;
+    localCatalog.then(catalog => { if (!live) showCatalog(catalog); }).catch(() => {});
+    return;
+  }
+  try {
+    const catalog = validateCatalog(data);
+    live = true;
+    showCatalog(catalog);
+  } catch {
+    // Un documento incompleto no sustituye el catálogo visible.
+  }
+}).catch(() => {});
 
 document.querySelector('#year').textContent = new Date().getFullYear();

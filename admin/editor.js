@@ -1,20 +1,29 @@
 import { bundledCatalog, categories, isCatalogImage, validateCatalog } from '../datos-catalogo.js';
-import { publishedCatalog } from '../firebase-catalogo.js';
+import { canEditCatalog, editorIdentity, readCatalog, saveCatalog } from '../firebase-catalogo.js';
 
 const form = document.querySelector('#editor');
 const list = document.querySelector('#products');
 const search = document.querySelector('#product-search');
 const searchResults = document.querySelector('#search-results');
 const status = document.querySelector('#status');
+const publishStatus = document.querySelector('#publish-status');
+const saveButton = document.querySelector('#save');
+const access = document.querySelector('#access');
+const uidLabel = document.querySelector('#editor-uid');
+const recover = document.querySelector('#recover');
 const notice = document.querySelector('#notice');
 const source = document.querySelector('#catalog-source');
 const inventory = document.querySelector('#inventory');
 const exchangeRate = document.querySelector('#exchange-rate');
 const count = new Intl.NumberFormat('es-VE');
 const money = new Intl.NumberFormat('es-VE', { maximumFractionDigits: 2 });
-const draftKey = 'iphone-accesorios/catalogo-borrador';
+const legacyKey = 'iphone-accesorios/catalogo-borrador';
 let dirty = false;
 let uploads = 0;
+let uid;
+let authorized = false;
+let loadedVersion = null;
+let publishing = false;
 
 const fields = [
   { key: 'name', label: 'Nombre', max: 100, required: true },
@@ -252,37 +261,92 @@ function updateConversions() {
   }
 }
 
-function getDraft() {
+function previousEdit() {
   try {
-    const saved = localStorage.getItem(draftKey);
+    const saved = localStorage.getItem(legacyKey);
     return saved ? validateCatalog(JSON.parse(saved)) : null;
   } catch {
     return null;
   }
 }
 
-const bundle = bundledCatalog();
-const remote = publishedCatalog().then((data) => data === null ? null : validateCatalog(data)).catch(() => null);
-const draft = getDraft();
-if (draft) {
-  showCatalog(draft, 'Borrador local');
-  bundle.catch(() => {});
-} else {
-  bundle.then((catalog) => showCatalog(catalog, 'Catálogo del sitio')).catch(() => {
-    notice.textContent = 'No se pudo cargar el catálogo del sitio. Puedes empezar con un catálogo vacío o importar un archivo.';
-    notice.hidden = false;
-    showCatalog(validateCatalog([]), 'Catálogo nuevo');
-  }).then(async () => {
-    const catalog = await remote;
-    if (catalog && !dirty && !uploads) {
-      notice.hidden = true;
-      showCatalog(catalog, 'Catálogo publicado');
-    }
-  });
+const legacyEdit = previousEdit();
+recover.hidden = !legacyEdit;
+recover.addEventListener('click', () => {
+  if (uploads || (dirty && !window.confirm('¿Reemplazar los cambios que tienes abiertos?'))) return;
+  showCatalog(legacyEdit, 'Edición recuperada');
+  dirty = true;
+  recover.hidden = true;
+  publishStatus.textContent = 'Revisa la edición recuperada antes de guardarla.';
+});
+
+const bundle = bundledCatalog().catch(() => null);
+bundle.then(catalog => {
+  if (form.hidden) showCatalog(catalog ?? validateCatalog([]), catalog ? 'Catálogo del sitio' : 'Catálogo nuevo');
+});
+
+function updateSaveButton() {
+  saveButton.disabled = publishing || !authorized || loadedVersion === null;
 }
 
+async function checkAccess() {
+  const button = document.querySelector('#check-access');
+  button.disabled = true;
+  try {
+    uid ??= await editorIdentity();
+    uidLabel.textContent = uid;
+    authorized = await canEditCatalog(uid);
+    access.hidden = authorized;
+    notice.hidden = true;
+    publishStatus.textContent = authorized ? 'Este navegador puede publicar.' : '';
+  } catch {
+    authorized = false;
+    notice.textContent = 'No se pudo verificar el acceso a Firebase. Revisa que Authentication anónimo esté activo y recarga el panel.';
+    notice.hidden = false;
+    access.hidden = !uid;
+  } finally {
+    button.disabled = false;
+    updateSaveButton();
+  }
+}
+
+async function syncCatalog(replace = false) {
+  const { data, version } = await readCatalog();
+  const catalog = data === null ? await bundle : validateCatalog(data);
+  if (catalog && (replace || !dirty)) {
+    showCatalog(catalog, data === null ? 'Catálogo del sitio' : 'Catálogo publicado');
+    dirty = false;
+  }
+  if (replace || !dirty) loadedVersion = version;
+  updateSaveButton();
+}
+
+document.querySelector('#check-access').addEventListener('click', async () => {
+  await checkAccess();
+  if (authorized && loadedVersion === null) {
+    try {
+      await syncCatalog();
+      if (loadedVersion === null) publishStatus.textContent = 'Recarga la versión pública antes de publicar.';
+    } catch {
+      publishStatus.textContent = 'No se pudo consultar el catálogo publicado.';
+    }
+  }
+});
+document.querySelector('#copy-uid').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(uid);
+    notice.textContent = 'ID copiado.';
+    notice.hidden = false;
+  } catch {
+    uidLabel.focus();
+  }
+});
+checkAccess();
+syncCatalog().catch(() => {
+  publishStatus.textContent = 'Firestore no respondió. Puedes exportar el catálogo mientras se restablece la conexión.';
+});
 form.addEventListener('input', (event) => {
-  if (event.target.type === 'file') return;
+  if (event.target.type === 'file' || event.target === search) return;
   dirty = true;
   if (event.target.name === 'stock') updateInventory();
   if (event.target === exchangeRate || event.target.name === 'priceUsd') updateConversions();
@@ -326,15 +390,11 @@ document.querySelector('#restore').addEventListener('click', async (event) => {
     status.textContent = 'Espera a que terminen de cargar las imágenes.';
     return;
   }
-  if ((dirty || getDraft()) && !window.confirm('¿Descartar el borrador y restaurar el catálogo público?')) return;
+  if (dirty && !window.confirm('¿Descartar los cambios sin publicar y cargar el catálogo público?')) return;
   const button = event.currentTarget;
   button.disabled = true;
   try {
-    const catalog = await Promise.race([remote, new Promise(resolve => setTimeout(() => resolve(null), 4000))]);
-    const next = catalog ?? await bundledCatalog();
-    localStorage.removeItem(draftKey);
-    showCatalog(next, catalog ? 'Catálogo publicado' : 'Catálogo del sitio');
-    dirty = false;
+    await syncCatalog(true);
     status.textContent = 'Versión pública restaurada.';
   } catch {
     status.textContent = 'No se pudo restaurar el catálogo público.';
@@ -343,8 +403,11 @@ document.querySelector('#restore').addEventListener('click', async (event) => {
   }
 });
 
-form.addEventListener('submit', (event) => {
+form.addEventListener('submit', async (event) => {
   event.preventDefault();
+  const exporting = event.submitter?.id === 'export';
+  const feedback = exporting ? status : publishStatus;
+  if (!exporting && saveButton.disabled) return;
   try {
     if (uploads) throw new Error('Espera a que terminen de cargar las imágenes.');
     const products = [...list.children].map(row => {
@@ -360,11 +423,35 @@ form.addEventListener('submit', (event) => {
       products
     });
     const contents = JSON.stringify(catalog, null, 2) + '\n';
-    if (event.submitter?.id !== 'export') {
-      localStorage.setItem(draftKey, contents);
-      source.textContent = 'Borrador local';
-      dirty = true;
-      status.textContent = 'Borrador guardado en este navegador.';
+    if (!exporting) {
+      publishing = true;
+      updateSaveButton();
+      const expected = loadedVersion;
+      dirty = false;
+      publishStatus.textContent = 'Guardando cambios en la tienda…';
+      try {
+        await saveCatalog(catalog, expected);
+      } catch (error) {
+        dirty = true;
+        if (error.code === 'catalog-conflict') loadedVersion = null;
+        if (error.code === 'permission-denied') {
+          authorized = false;
+          access.hidden = false;
+          throw new Error('Firebase rechazó el cambio. Verifica el acceso de este navegador y las reglas.');
+        }
+        throw error;
+      }
+      if (legacyEdit && recover.hidden) {
+        try { localStorage.removeItem(legacyKey); } catch { /* La publicación ya fue confirmada. */ }
+      }
+      source.textContent = dirty ? 'Cambios sin publicar' : 'Catálogo publicado';
+      publishStatus.textContent = 'Cambios publicados en la tienda.';
+      loadedVersion = null;
+      try {
+        const { data, version } = await readCatalog();
+        if (JSON.stringify(validateCatalog(data)) === JSON.stringify(catalog)) loadedVersion = version;
+      } catch { /* La escritura ya fue confirmada. */ }
+      if (loadedVersion === null) publishStatus.textContent += ' Recarga el catálogo antes de volver a publicar.';
       return;
     }
     const file = new Blob([contents], { type: 'application/json' });
@@ -376,6 +463,11 @@ form.addEventListener('submit', (event) => {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     status.textContent = 'Archivo descargado. Está listo para publicar.';
   } catch (error) {
-    status.textContent = error.message;
+    feedback.textContent = error.message;
+  } finally {
+    if (!exporting) {
+      publishing = false;
+      updateSaveButton();
+    }
   }
 });
