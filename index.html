@@ -1,28 +1,283 @@
 <!doctype html>
-<!--
-  Iphone's accesorios · sitio en construcción por DGP Global Group.
-  Para Claude: lee CLAUDE.md antes de empezar. Diseño premium basado en el logo, sin emojis (solo iconos SVG),
-  pregunta el estilo visual, la página de ejemplo y los datos de contacto y redes que falten, y trabaja sobre eso.
--->
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Iphone's accesorios · Próximamente</title>
-<meta name="robots" content="noindex">
-<style>
-  :root { color-scheme: light dark; }
-  body { margin:0; min-height:100vh; display:grid; place-items:center; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; background:#0b1220; color:#e2e8f0; text-align:center; padding:24px; box-sizing:border-box; }
-  img { max-width:220px; max-height:140px; object-fit:contain; margin-bottom:28px; }
-  h1 { font-size:clamp(26px,5vw,40px); margin:0 0 10px; font-weight:700; letter-spacing:-.02em; }
-  p { margin:0; color:#94a3b8; }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#121110">
+  <title>Iphone’s accesorios | Tecnología en Valencia</title>
+  <meta name="description" content="Accesorios para iPhone, audio y energía en Valencia, Carabobo. Consulta disponibilidad y precios al detal y al mayor por WhatsApp.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Iphone’s accesorios | Tecnología en Valencia">
+  <meta property="og:description" content="Encuentra accesorios para iPhone, audio y energía. Ventas al detal y al mayor en Valencia, Carabobo.">
+  <meta property="og:url" content="https://iphoneaccesorios.dgp-link.com/">
+  <meta property="og:image" content="https://iphoneaccesorios.dgp-link.com/assets/logo.jpg">
+  <link rel="canonical" href="https://iphoneaccesorios.dgp-link.com/">
+  <link rel="icon" href="assets/logo.jpg" type="image/jpeg">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ElectronicsStore",
+      "name": "Iphone’s accesorios",
+      "url": "https://iphoneaccesorios.dgp-link.com/",
+      "image": "https://iphoneaccesorios.dgp-link.com/assets/logo.jpg",
+      "telephone": "+584123897248",
+      "email": "diegoegana606@gmail.com",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Valencia",
+        "addressRegion": "Carabobo",
+        "addressCountry": "VE"
+      },
+      "sameAs": ["https://www.tiktok.com/@iphone_accesories2"]
+    }
+  </script>
+  <style>
+    @font-face {
+      font-family: "DM Sans";
+      src: url("assets/fonts/dm-sans-latin-wght-normal.woff2") format("woff2");
+      font-weight: 400 700;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Instrument Serif";
+      src: url("assets/fonts/instrument-serif-latin-400-normal.woff2") format("woff2");
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Instrument Serif";
+      src: url("assets/fonts/instrument-serif-latin-400-italic.woff2") format("woff2");
+      font-style: italic;
+      font-display: swap;
+    }
+    :root {
+      color-scheme: dark;
+      --background: #121110;
+      --surface: #1a1816;
+      --text: #f9f3e9;
+      --muted: #c4b9ac;
+      --accent: #edca9c;
+      --line: #3c3430;
+      --heading: "Instrument Serif", Georgia, serif;
+      --body: "DM Sans", system-ui, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--text); background: var(--background); font: 1rem/1.6 var(--body); }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; width: 100%; height: auto; }
+    button { font: inherit; }
+    h1, h2, h3, p { margin: 0; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
+    [hidden] { display: none !important; }
+    .wrap { width: min(calc(100% - 2.5rem), 1280px); margin-inline: auto; }
+    .skip { position: absolute; top: .5rem; left: .5rem; z-index: 3; transform: translateY(-150%); background: var(--text); color: var(--background); padding: .6rem; }
+    .skip:focus { transform: none; }
+    .icon { width: 1.2em; height: 1.2em; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .site-header { border-bottom: 1px solid var(--line); }
+    .header-inner, .brand, .nav, .actions, .contact-links { display: flex; align-items: center; gap: 1rem; }
+    .header-inner { min-height: 75px; justify-content: space-between; flex-wrap: wrap; padding-block: .7rem; }
+    .brand { gap: .7rem; font-weight: 700; line-height: 1.05; }
+    .brand img { width: 48px; height: 48px; border-radius: 50%; }
+    .brand span span { display: block; margin-top: .25rem; color: var(--muted); font-size: .73rem; font-weight: 500; }
+    .nav { color: var(--muted); font-size: .9rem; flex-wrap: wrap; }
+    .nav a { padding-block: .45rem; }
+    .nav a:hover, .contact-links a:hover { color: var(--accent); }
+    .button { display: inline-flex; min-height: 46px; align-items: center; justify-content: center; gap: .7rem; border: 1px solid var(--line); border-radius: 99px; padding: .55rem 1.2rem; font-weight: 700; font-size: .88rem; transition: background .2s, color .2s, border-color .2s; }
+    .button:hover { border-color: var(--accent); color: var(--accent); }
+    .button-primary { background: var(--accent); border-color: var(--accent); color: #23180d; }
+    .button-primary:hover { background: #fce2c2; color: #23180d; }
+    .hero { display: grid; align-items: center; gap: 2rem; padding-block: clamp(2rem, 6vw, 5.5rem); }
+    .eyebrow { color: var(--accent); font-size: .72rem; font-weight: 700; letter-spacing: .17em; text-transform: uppercase; }
+    h1, h2 { font-family: var(--heading); font-weight: 400; line-height: .99; }
+    h1 { margin: 1.1rem 0 1.35rem; font-size: clamp(3.85rem, 7.6vw, 7.2rem); letter-spacing: -.025em; }
+    h1 em { color: var(--accent); font-weight: 400; }
+    .hero-copy > p:not(.eyebrow), .section-copy, .contact-copy { color: var(--muted); max-width: 38ch; }
+    .actions { margin-top: 1.65rem; flex-wrap: wrap; }
+    .hero figure { position: relative; min-width: 0; margin: 0; }
+    .hero figure img { aspect-ratio: 3 / 2; object-fit: cover; border: 1px solid var(--line); border-radius: 1rem; background: var(--surface); }
+    .hero figcaption { margin-top: .55rem; text-align: right; color: var(--muted); font-size: .75rem; }
+    .catalog { border-top: 1px solid var(--line); padding-block: clamp(2.8rem, 6vw, 5.5rem); }
+    .section-heading { display: flex; align-items: end; justify-content: space-between; flex-wrap: wrap; gap: 1rem 2rem; margin-bottom: 1.6rem; }
+    h2 { font-size: clamp(3rem, 6vw, 5rem); }
+    .filters { display: flex; gap: .55rem; flex-wrap: wrap; margin-bottom: 1.4rem; }
+    .filter { background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: .48rem .95rem; min-height: 44px; cursor: pointer; }
+    .filter:hover { border-color: var(--accent); color: var(--text); }
+    .filter[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: var(--background); }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .products { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 225px), 1fr)); }
+    .product { min-width: 0; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: .85rem; overflow: hidden; background: var(--surface); }
+    .product img { aspect-ratio: 4 / 3; object-fit: cover; border-bottom: 1px solid var(--line); }
+    .product-body { display: flex; flex: 1; flex-direction: column; align-items: flex-start; padding: 1.05rem; }
+    .product h3 { font-size: 1.07rem; font-weight: 700; }
+    .product p { color: var(--muted); font-size: .86rem; margin: .28rem 0 .8rem; }
+    .product a { display: inline-flex; align-items: center; gap: .35rem; min-height: 44px; margin-top: auto; color: var(--accent); font-size: .86rem; font-weight: 700; }
+    .product a:hover { text-decoration: underline; }
+    .note { color: var(--muted); font-size: .8rem; margin-top: 1rem; }
+    .wholesale { background: #211b16; border: 1px solid #4a3929; border-radius: 1rem; padding: clamp(1.5rem, 5vw, 3.5rem); margin-bottom: clamp(3rem, 6vw, 5.5rem); display: flex; align-items: end; justify-content: space-between; flex-wrap: wrap; gap: 1.2rem; }
+    .wholesale h2 { margin: .45rem 0 .7rem; }
+    .contact { border-top: 1px solid var(--line); padding-block: 2.4rem 4.4rem; }
+    .contact h2 { font-size: 2.8rem; }
+    .contact-links { margin: .9rem 0 1.6rem; gap: .5rem 1.4rem; flex-wrap: wrap; }
+    .contact-links a { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; overflow-wrap: anywhere; }
+    .credits { color: var(--muted); font-size: .82rem; }
+    .credits a { text-decoration: underline; text-underline-offset: 3px; }
+    .whatsapp-float { position: fixed; z-index: 2; bottom: max(1rem, env(safe-area-inset-bottom)); right: max(1rem, env(safe-area-inset-right)); width: 52px; height: 52px; padding: 0; box-shadow: 0 4px 24px #0008; font-size: 1.25rem; }
+    @media (min-width: 770px) {
+      .hero { grid-template-columns: 1fr 1.15fr; gap: clamp(2rem, 5vw, 5rem); }
+      .nav { gap: 1.5rem; }
+    }
+    @media (max-width: 480px) {
+      .header-inner { row-gap: .45rem; }
+      .nav { order: 3; flex-basis: 100%; }
+      .hero { padding-top: 2.4rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .button { transition: none; }
+    }
+  </style>
 </head>
 <body>
-  <main>
-    <img src="assets/logo.jpg" alt="Iphone's accesorios">
-    <h1>Iphone's accesorios</h1>
-    <p>Nuestro sitio web está en construcción.</p>
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" aria-hidden="true" style="position:absolute">
+    <symbol id="arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
+    <symbol id="whatsapp" viewBox="0 0 24 24"><path d="M20.5 11.7a8.5 8.5 0 0 1-12.6 7.5L4 20.3l1.1-3.8A8.5 8.5 0 1 1 20.5 11.7Z"/><path d="M9 8c.2 3 2 4.8 5 6m-5-6-.9 1.3m5.9 4.7 1.3-.9"/></symbol>
+  </svg>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="#" aria-label="Iphone’s accesorios, inicio">
+        <img src="assets/logo.jpg" alt="" width="48" height="48">
+        <span>Iphone’s<span>accesorios</span></span>
+      </a>
+      <nav class="nav" aria-label="Navegación principal">
+        <a href="#catalogo">Catálogo</a>
+        <a href="#mayor">Al mayor</a>
+        <a href="#contacto">Contacto</a>
+      </nav>
+      <a class="button" href="https://wa.me/584123897248"><svg class="icon" aria-hidden="true"><use href="#whatsapp"></use></svg>WhatsApp</a>
+    </div>
+  </header>
+  <main id="contenido">
+    <section class="wrap hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">Valencia, Carabobo</p>
+        <h1 id="hero-title">Accesorios para <em>tu iPhone.</em></h1>
+        <p>Carga, audio y energía para el día a día. Venta al detal y al mayor con atención directa por WhatsApp.</p>
+        <div class="actions">
+          <a class="button button-primary" href="#catalogo">Ver catálogo <svg class="icon" aria-hidden="true"><use href="#arrow"></use></svg></a>
+          <a class="button" href="#mayor">Comprar al mayor</a>
+        </div>
+      </div>
+      <figure>
+        <img src="assets/accesorios.webp" alt="Composición de audífonos, un cargador, un cable trenzado y una batería portátil sobre una base oscura" width="1200" height="800" fetchpriority="high">
+        <figcaption>Imagen ilustrativa</figcaption>
+      </figure>
+    </section>
+    <section class="catalog" id="catalogo" aria-labelledby="catalog-title">
+      <div class="wrap">
+        <div class="section-heading">
+          <h2 id="catalog-title">Catálogo</h2>
+          <p class="section-copy">Consulta modelos, precios y disponibilidad por WhatsApp.</p>
+        </div>
+        <div class="filters" role="group" aria-label="Filtrar por categoría" hidden>
+          <button class="filter" type="button" data-filter="all" aria-pressed="true">Todos</button>
+          <button class="filter" type="button" data-filter="carga" aria-pressed="false">Carga y cables</button>
+          <button class="filter" type="button" data-filter="audio" aria-pressed="false">Audio</button>
+          <button class="filter" type="button" data-filter="energia" aria-pressed="false">Energía</button>
+        </div>
+        <p class="sr-only" id="filter-status" role="status"></p>
+        <div class="products">
+          <article class="product" data-category="carga">
+            <img src="assets/cargador.webp" alt="Cargador de pared blanco" width="480" height="360" loading="lazy">
+            <div class="product-body">
+              <h3>Cargadores para iPhone</h3>
+              <p>Consulta las opciones compatibles con tu equipo.</p>
+              <a href="https://wa.me/584123897248?text=Hola%2C%20quisiera%20consultar%20precio%20y%20disponibilidad%20de%20cargadores%20para%20iPhone." aria-label="Consultar cargadores para iPhone por WhatsApp">Consultar <svg class="icon" aria-hidden="true"><use href="#arrow"></use></svg></a>
+            </div>
+          </article>
+          <article class="product" data-category="carga">
+            <img src="assets/cable.webp" alt="Cable de carga trenzado y enrollado" width="480" height="360" loading="lazy">
+            <div class="product-body">
+              <h3>Cables para iPhone</h3>
+              <p>Indícanos tu modelo para consultar el conector adecuado.</p>
+              <a href="https://wa.me/584123897248?text=Hola%2C%20quisiera%20consultar%20precio%20y%20disponibilidad%20de%20cables%20para%20iPhone." aria-label="Consultar cables para iPhone por WhatsApp">Consultar <svg class="icon" aria-hidden="true"><use href="#arrow"></use></svg></a>
+            </div>
+          </article>
+          <article class="product" data-category="audio">
+            <img src="assets/audio.webp" alt="Audífonos inalámbricos blancos en su estuche" width="480" height="360" loading="lazy">
+            <div class="product-body">
+              <h3>AirPods Pro</h3>
+              <p>Consulta por las opciones de audífonos inalámbricos.</p>
+              <a href="https://wa.me/584123897248?text=Hola%2C%20quisiera%20consultar%20precio%20y%20disponibilidad%20de%20AirPods%20Pro." aria-label="Consultar AirPods Pro por WhatsApp">Consultar <svg class="icon" aria-hidden="true"><use href="#arrow"></use></svg></a>
+            </div>
+          </article>
+          <article class="product" data-category="energia">
+            <img src="assets/power-bank.webp" alt="Batería portátil de color grafito" width="480" height="360" loading="lazy">
+            <div class="product-body">
+              <h3>Power banks</h3>
+              <p>Baterías portátiles para cargar tus equipos fuera de casa.</p>
+              <a href="https://wa.me/584123897248?text=Hola%2C%20quisiera%20consultar%20precio%20y%20disponibilidad%20de%20power%20banks." aria-label="Consultar power banks por WhatsApp">Consultar <svg class="icon" aria-hidden="true"><use href="#arrow"></use></svg></a>
+            </div>
+          </article>
+          <article class="product" data-category="energia">
+            <img src="assets/mini-ups.webp" alt="Batería de respaldo compacta con puertos frontales" width="480" height="360" loading="lazy">
+            <div class="product-body">
+              <h3>Mini UPS</h3>
+              <p>Respaldo de energía para equipos compatibles, como routers.</p>
+              <a href="https://wa.me/584123897248?text=Hola%2C%20quisiera%20consultar%20precio%20y%20disponibilidad%20de%20mini%20UPS." aria-label="Consultar mini UPS por WhatsApp">Consultar <svg class="icon" aria-hidden="true"><use href="#arrow"></use></svg></a>
+            </div>
+          </article>
+        </div>
+        <p class="note">Imágenes ilustrativas. Confirma el modelo exacto antes de comprar.</p>
+      </div>
+    </section>
+    <section class="wrap wholesale" id="mayor" aria-labelledby="wholesale-title">
+      <div>
+        <p class="eyebrow">Para tiendas y revendedores</p>
+        <h2 id="wholesale-title">Compras al mayor</h2>
+        <p class="contact-copy">Cuéntanos qué productos buscas y cuántas unidades necesitas para cotizar tu pedido.</p>
+      </div>
+      <a class="button button-primary" href="https://wa.me/584123897248?text=Hola%2C%20quisiera%20cotizar%20una%20compra%20al%20mayor.">Cotizar al mayor <svg class="icon" aria-hidden="true"><use href="#arrow"></use></svg></a>
+    </section>
   </main>
+  <footer class="contact" id="contacto">
+    <div class="wrap">
+      <h2>Hablemos</h2>
+      <p class="contact-copy">Valencia, Carabobo · Tu mejor opción a la hora de comprar.</p>
+      <div class="contact-links">
+        <a href="https://wa.me/584123897248"><svg class="icon" aria-hidden="true"><use href="#whatsapp"></use></svg>+58 412-3897248</a>
+        <a href="mailto:diegoegana606@gmail.com">diegoegana606@gmail.com</a>
+        <a href="https://www.tiktok.com/@iphone_accesories2">TikTok <svg class="icon" aria-hidden="true"><use href="#arrow"></use></svg></a>
+      </div>
+      <p class="credits">© <span id="year">2026</span> Iphone’s accesorios · <a href="https://dgpglobalgroup.com">Diseñado por DGP Global Group</a></p>
+    </div>
+  </footer>
+  <a class="button button-primary whatsapp-float" href="https://wa.me/584123897248" aria-label="Escribir por WhatsApp"><svg class="icon" aria-hidden="true"><use href="#whatsapp"></use></svg></a>
+  <script>
+    const filters = document.querySelector('.filters');
+    const filterButtons = [...filters.querySelectorAll('button')];
+    const products = [...document.querySelectorAll('.product')];
+    const filterStatus = document.querySelector('#filter-status');
+
+    filters.hidden = false;
+    filters.addEventListener('click', (event) => {
+      const selected = event.target.closest('button[data-filter]');
+      if (!selected) return;
+
+      for (const button of filterButtons) {
+        button.setAttribute('aria-pressed', String(button === selected));
+      }
+
+      const category = selected.dataset.filter;
+      let visible = 0;
+      for (const product of products) {
+        product.hidden = category !== 'all' && product.dataset.category !== category;
+        if (!product.hidden) visible += 1;
+      }
+      filterStatus.textContent = visible === 1 ? '1 resultado' : `${visible} resultados`;
+    });
+
+    document.querySelector('#year').textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
