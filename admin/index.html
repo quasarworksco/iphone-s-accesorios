@@ -29,7 +29,7 @@
 <body>
   <a href="../">Volver a la tienda</a>
   <h1>Editar catálogo</h1>
-  <p>Edita los productos y sus precios. Puedes descargar el catálogo para subirlo a GitHub o publicarlo con una cuenta de Google autorizada.</p>
+  <p>Edita los productos, sus precios en USD, la tasa en bolívares y las cantidades en stock. Puedes descargar el catálogo para subirlo a GitHub o publicarlo con una cuenta de Google autorizada.</p>
   <div class="actions">
     <button type="button" id="sign-in">Conectar con Google</button>
     <button type="button" id="sign-out" hidden>Cerrar sesión</button>
@@ -38,6 +38,12 @@
   <p id="connection" role="status"></p>
   <label>Importar catálogo JSON <input type="file" id="import" accept=".json,application/json"></label>
   <form id="editor" hidden>
+    <p>La tienda calcula los precios en bolívares con esta tasa. Deja el stock en blanco para mostrar «Consultar disponibilidad» o escribe 0 para marcar el producto como agotado.</p>
+    <label for="exchange-rate">Tasa del día en bolívares por US$1
+      <input id="exchange-rate" type="number" min="0" step="any" inputmode="decimal" aria-describedby="rate-help">
+    </label>
+    <p id="rate-help">Introduce una tasa mayor que cero. Puedes dejarla en blanco si aún no la tienes.</p>
+    <p id="inventory" role="status"></p>
     <div id="products"></div>
     <div class="actions">
       <button type="button" id="add">Añadir producto</button>

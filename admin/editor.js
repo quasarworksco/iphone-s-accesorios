@@ -8,6 +8,10 @@ const connection = document.querySelector('#connection');
 const publish = document.querySelector('#publish');
 const signIn = document.querySelector('#sign-in');
 const signOut = document.querySelector('#sign-out');
+const inventory = document.querySelector('#inventory');
+const count = new Intl.NumberFormat('es-VE');
+const money = new Intl.NumberFormat('es-VE', { maximumFractionDigits: 2 });
+const exchangeRate = document.querySelector('#exchange-rate');
 let admin;
 let authorized = false;
 let dirty = false;
@@ -17,12 +21,14 @@ const fields = [
   { key: 'name', label: 'Nombre', max: 100, required: true },
   { key: 'category', label: 'Categoría' },
   { key: 'description', label: 'Descripción', max: 300 },
-  { key: 'price', label: 'Precio visible (opcional)', max: 60 },
+  { key: 'priceUsd', label: 'Precio en USD', step: '0.01' },
+  { key: 'stock', label: 'Unidades en stock', step: '1', max: Number.MAX_SAFE_INTEGER },
   { key: 'image', label: 'Ruta en assets o URL de Cloudinary', max: 400, required: true }
 ];
 
 function addProduct(product = {}) {
   const row = document.createElement('fieldset');
+  row.dataset.legacyPrice = product.price ?? '';
   const legend = document.createElement('legend');
   legend.textContent = product.name || 'Nuevo producto';
   const controls = document.createElement('div');
@@ -37,6 +43,11 @@ function addProduct(product = {}) {
       for (const [value, text] of Object.entries(categories)) {
         input.add(new Option(text, value));
       }
+    } else if (field.step) {
+      input.type = 'number';
+      input.min = '0';
+      input.step = field.step;
+      if (field.max) input.max = field.max;
     } else {
       input.maxLength = field.max;
       input.required = Boolean(field.required);
@@ -53,6 +64,7 @@ function addProduct(product = {}) {
   remove.textContent = 'Quitar producto';
   remove.addEventListener('click', () => {
     row.remove();
+    updateInventory();
     dirty = true;
     document.querySelector('#add').focus();
   });
@@ -92,25 +104,64 @@ function addProduct(product = {}) {
   });
   upload.append(file);
   actions.append(remove, upload);
-  row.append(legend, controls, actions);
+  const converted = document.createElement('p');
+  converted.className = 'converted-price';
+  row.append(legend, controls, converted, actions);
   list.append(row);
   return row;
 }
 
 function showCatalog(catalog) {
   list.replaceChildren();
-  for (const product of catalog) addProduct(product);
+  exchangeRate.value = catalog.exchangeRate ?? '';
+  for (const product of catalog.products) addProduct(product);
   form.hidden = false;
+  updateInventory();
+  updateConversions();
 }
 
 const initialCatalog = bundledCatalog().then(showCatalog).catch(error => { status.textContent = error.message; });
-form.addEventListener('input', () => { dirty = true; });
+function updateInventory() {
+  let total = 0n;
+  let unknown = 0;
+  let soldOut = 0;
+  const stocks = [...list.querySelectorAll('[name=stock]')];
+  for (const input of stocks) {
+    const value = input.valueAsNumber;
+    if (!input.validity.valid || !Number.isSafeInteger(value)) {
+      unknown += 1;
+    } else if (value === 0) {
+      soldOut += 1;
+    } else {
+      total += BigInt(value);
+    }
+  }
+  inventory.textContent = `${count.format(stocks.length)} productos · ${count.format(total)} unidades registradas · ${count.format(soldOut)} agotados · ${count.format(unknown)} sin stock registrado`;
+}
+
+function updateConversions() {
+  const rate = exchangeRate.valueAsNumber;
+  exchangeRate.setCustomValidity(exchangeRate.value !== '' && rate <= 0 ? 'Ingresa una tasa mayor que cero.' : '');
+  for (const row of list.children) {
+    const usd = row.querySelector('[name=priceUsd]').valueAsNumber;
+    const total = usd * rate;
+    row.querySelector('.converted-price').textContent = usd === 0 ? 'Bs. 0' :
+      rate > 0 && usd >= 0 && Number.isFinite(total) ? `Bs. ${money.format(total)}` : '';
+  }
+}
+
+form.addEventListener('input', (event) => {
+  dirty = true;
+  if (event.target.name === 'stock') updateInventory();
+  if (event.target === exchangeRate || event.target.name === 'priceUsd') updateConversions();
+});
 document.querySelector('#add').addEventListener('click', () => {
   if (list.children.length >= 100) {
     status.textContent = 'El catálogo admite hasta 100 productos.';
     return;
   }
   addProduct().querySelector('input').focus();
+  updateInventory();
   dirty = true;
 });
 
@@ -134,8 +185,18 @@ document.querySelector('#import').addEventListener('change', async (event) => {
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   try {
-    const catalog = validateCatalog([...list.children].map(row =>
-      Object.fromEntries(fields.map(({ key }) => [key, row.querySelector(`[name="${key}"]`).value]))));
+    const products = [...list.children].map(row => {
+      const product = { price: row.dataset.legacyPrice };
+      for (const { key, step } of fields) {
+        const input = row.querySelector(`[name="${key}"]`);
+        product[key] = step ? (input.value === '' ? null : input.valueAsNumber) : input.value;
+      }
+      return product;
+    });
+    const catalog = validateCatalog({
+      exchangeRate: exchangeRate.value === '' ? null : exchangeRate.valueAsNumber,
+      products
+    });
     if (event.submitter === publish) {
       if (!authorized || !cloudLoaded) return;
       publish.disabled = true;

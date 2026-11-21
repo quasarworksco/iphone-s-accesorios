@@ -6,6 +6,11 @@ const grid = document.querySelector('.products');
 const message = document.querySelector('#catalog-message');
 const filterStatus = document.querySelector('#filter-status');
 let products = [];
+let exchangeRate = null;
+const rateLabel = document.querySelector('#catalog-rate');
+const amount = new Intl.NumberFormat('es-VE', { maximumFractionDigits: 2 });
+const units = new Intl.NumberFormat('es-VE');
+const rateFormat = new Intl.NumberFormat('es-VE', { maximumSignificantDigits: 15 });
 
 function render() {
   const category = filters.querySelector('[aria-pressed="true"]').dataset.filter;
@@ -28,11 +33,20 @@ function render() {
     description.textContent = product.description;
     body.append(title, description);
 
-    if (product.price) {
-      const price = document.createElement('strong');
-      price.textContent = product.price;
-      body.append(price);
+    const prices = [];
+    if (product.priceUsd !== null) prices.push(`US$${amount.format(product.priceUsd)}`);
+    if (product.priceUsd === 0 || (product.priceUsd !== null && exchangeRate !== null)) {
+      prices.push(`Bs. ${amount.format(product.priceUsd * (exchangeRate ?? 0))}`);
     }
+    const price = document.createElement('strong');
+    price.textContent = prices.join(' / ') || product.price || 'Consultar precio';
+    body.append(price);
+
+    const availability = document.createElement('p');
+    availability.textContent = product.stock === null ? 'Consultar disponibilidad' :
+      product.stock === 0 ? 'Agotado' :
+      product.stock === 1 ? '1 unidad disponible' : `${units.format(product.stock)} unidades disponibles`;
+    body.append(availability);
 
     const link = document.createElement('a');
     link.textContent = 'Consultar por WhatsApp';
@@ -43,6 +57,7 @@ function render() {
     card.append(image, body);
     return card;
   }));
+  rateLabel.textContent = exchangeRate === null ? '' : `Tasa de referencia: Bs. ${rateFormat.format(exchangeRate)} por US$1.`;
   message.textContent = visible.length ? '' : 'Aún no hay productos en esta categoría.';
   filterStatus.textContent = `${visible.length} ${visible.length === 1 ? 'producto' : 'productos'}`;
 }
@@ -62,7 +77,7 @@ filters.addEventListener('click', (event) => {
 
 message.textContent = 'Cargando catálogo…';
 const localCatalog = bundledCatalog().then((catalog) => {
-  products = catalog;
+  ({ products, exchangeRate } = catalog);
   filters.hidden = false;
   render();
 }).catch(() => {
@@ -73,7 +88,7 @@ publishedCatalog().then(async (catalog) => {
   if (catalog === null) return;
   const published = validateCatalog(catalog);
   await localCatalog;
-  products = published;
+  ({ products, exchangeRate } = published);
   filters.hidden = false;
   render();
 }).catch(() => {

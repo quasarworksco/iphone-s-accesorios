@@ -1,32 +1,45 @@
-[
-  {
-    "category": "carga",
-    "image": "assets/cargador.webp",
-    "name": "Cargadores para iPhone",
-    "description": "Consulta las opciones compatibles con tu equipo."
-  },
-  {
-    "category": "carga",
-    "image": "assets/cable.webp",
-    "name": "Cables para iPhone",
-    "description": "Indícanos tu modelo para consultar el conector adecuado."
-  },
-  {
-    "category": "audio",
-    "image": "assets/audio.webp",
-    "name": "AirPods Pro",
-    "description": "Consulta por las opciones de audífonos inalámbricos."
-  },
-  {
-    "category": "energia",
-    "image": "assets/power-bank.webp",
-    "name": "Power banks",
-    "description": "Baterías portátiles para cargar tus equipos fuera de casa."
-  },
-  {
-    "category": "energia",
-    "image": "assets/mini-ups.webp",
-    "name": "Mini UPS",
-    "description": "Respaldo de energía para equipos compatibles, como routers."
-  }
-]
+{
+  "exchangeRate": null,
+  "products": [
+    {
+      "category": "carga",
+      "image": "assets/cargador.webp",
+      "name": "Cargadores para iPhone",
+      "description": "Cargadores de pared para la carga diaria. Indícanos tu modelo de iPhone para elegir una opción compatible.",
+      "priceUsd": 0,
+      "stock": null
+    },
+    {
+      "category": "carga",
+      "image": "assets/cable.webp",
+      "name": "Cables para iPhone",
+      "description": "Cables para cargar y conectar tu iPhone. Consulta por el tipo de conector y la longitud.",
+      "priceUsd": 0,
+      "stock": null
+    },
+    {
+      "category": "audio",
+      "image": "assets/audio.webp",
+      "name": "AirPods Pro",
+      "description": "Audífonos inalámbricos con estuche de carga. Consulta por la versión y los accesorios incluidos.",
+      "priceUsd": 0,
+      "stock": null
+    },
+    {
+      "category": "energia",
+      "image": "assets/power-bank.webp",
+      "name": "Power banks",
+      "description": "Baterías portátiles para recargar tus equipos fuera de casa. Consulta por capacidad y conectores.",
+      "priceUsd": 0,
+      "stock": null
+    },
+    {
+      "category": "energia",
+      "image": "assets/mini-ups.webp",
+      "name": "Mini UPS",
+      "description": "Respaldo compacto para equipos compatibles, como routers. Consulta voltaje y autonomía según el modelo.",
+      "priceUsd": 0,
+      "stock": null
+    }
+  ]
+}

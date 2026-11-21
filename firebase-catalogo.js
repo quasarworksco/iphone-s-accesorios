@@ -24,7 +24,7 @@ export function openCatalog() {
 export async function publishedCatalog() {
   const { firestore, ref } = await openCatalog();
   const snapshot = await firestore.getDoc(ref);
-  return snapshot.exists() ? snapshot.data().products : null;
+  return snapshot.exists() ? snapshot.data() : null;
 }
 
 export async function connectAdmin() {
@@ -37,7 +37,7 @@ export async function connectAdmin() {
     signIn: () => authSDK.signInWithPopup(auth, new authSDK.GoogleAuthProvider()),
     signOut: () => authSDK.signOut(auth),
     onUser: (callback) => authSDK.onAuthStateChanged(auth, callback),
-    publish: (products) => firestore.setDoc(ref, { products, updatedAt: firestore.serverTimestamp() }),
+    publish: (catalog) => firestore.setDoc(ref, { ...catalog, updatedAt: firestore.serverTimestamp() }),
     isAdmin: async (uid) => (await firestore.getDoc(firestore.doc(db, 'administradores', uid))).exists()
   };
 }
