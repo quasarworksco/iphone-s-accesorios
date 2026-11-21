@@ -131,5 +131,11 @@ button:disabled { opacity: .6; cursor: wait; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 #access { margin-bottom: 1.25rem; }
 #access p { margin-top: .5rem; }
-#editor-uid { display: inline-block; max-width: 100%; padding: .35rem .55rem; overflow-wrap: anywhere; border-radius: .4rem; background: var(--mint); }
+#access { max-width: 30rem; }
+#login { display: grid; gap: .9rem; margin-top: 1rem; }
+#login button { justify-self: start; }
+#login-status:empty { display: none; }
+.session-actions { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; }
+#logout { color: #f7faf9; background: transparent; border-color: #52655c; }
+#logout:hover { color: #e0fff5; border-color: #bfe4d8; }
 .publish-actions p { color: var(--deep); }

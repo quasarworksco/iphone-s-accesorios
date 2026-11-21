@@ -8,6 +8,8 @@ const firebaseConfig = {
   appId: '1:654342708176:web:28cfc8d784540a8020b7d5'
 };
 
+const adminEmail = 'admin@iphoneaccesorios.dgp-link.com';
+
 let connection;
 export function openCatalog() {
   connection ??= Promise.all([
@@ -41,14 +43,40 @@ export async function watchCatalog(onCatalog) {
   });
 }
 
-export async function editorIdentity() {
-  const [{ app }, authSDK] = await Promise.all([
+async function editorAuth() {
+  const [{ app }, sdkAuth] = await Promise.all([
     openCatalog(),
     import(`${sdk}/firebase-auth.js`)
   ]);
-  const auth = authSDK.getAuth(app);
+  const auth = sdkAuth.getAuth(app);
   await auth.authStateReady();
-  return (auth.currentUser ?? (await authSDK.signInAnonymously(auth)).user).uid;
+  return { auth, sdkAuth };
+}
+
+export async function editorIdentity() {
+  const { auth, sdkAuth } = await editorAuth();
+  if (!auth.currentUser) return null;
+  const token = await auth.currentUser.getIdTokenResult();
+  if (token.signInProvider === 'password' && auth.currentUser.email === adminEmail) return auth.currentUser.uid;
+  await sdkAuth.signOut(auth);
+  return null;
+}
+
+export async function signInEditor(username, password) {
+  const account = username.trim().toLowerCase();
+  if (account !== 'admin') {
+    const error = new Error('El usuario o la contraseña son incorrectos.');
+    error.code = 'auth/invalid-credential';
+    throw error;
+  }
+  const { auth, sdkAuth } = await editorAuth();
+  const credential = await sdkAuth.signInWithEmailAndPassword(auth, adminEmail, password);
+  return credential.user.uid;
+}
+
+export async function signOutEditor() {
+  const { auth, sdkAuth } = await editorAuth();
+  await sdkAuth.signOut(auth);
 }
 
 export async function canEditCatalog(uid) {

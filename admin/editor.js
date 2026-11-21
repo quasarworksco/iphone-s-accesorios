@@ -1,5 +1,5 @@
 import { bundledCatalog, categories, isCatalogImage, validateCatalog } from '../datos-catalogo.js';
-import { canEditCatalog, editorIdentity, readCatalog, saveCatalog } from '../firebase-catalogo.js';
+import { canEditCatalog, editorIdentity, readCatalog, saveCatalog, signInEditor, signOutEditor } from '../firebase-catalogo.js';
 
 const form = document.querySelector('#editor');
 const list = document.querySelector('#products');
@@ -9,7 +9,10 @@ const status = document.querySelector('#status');
 const publishStatus = document.querySelector('#publish-status');
 const saveButton = document.querySelector('#save');
 const access = document.querySelector('#access');
-const uidLabel = document.querySelector('#editor-uid');
+const login = document.querySelector('#login');
+const loginStatus = document.querySelector('#login-status');
+const logout = document.querySelector('#logout');
+const editorNav = document.querySelector('#editor-nav');
 const recover = document.querySelector('#recover');
 const notice = document.querySelector('#notice');
 const source = document.querySelector('#catalog-source');
@@ -20,7 +23,6 @@ const money = new Intl.NumberFormat('es-VE', { maximumFractionDigits: 2 });
 const legacyKey = 'iphone-accesorios/catalogo-borrador';
 let dirty = false;
 let uploads = 0;
-let uid;
 let authorized = false;
 let loadedVersion = null;
 let publishing = false;
@@ -281,33 +283,9 @@ recover.addEventListener('click', () => {
 });
 
 const bundle = bundledCatalog().catch(() => null);
-bundle.then(catalog => {
-  if (form.hidden) showCatalog(catalog ?? validateCatalog([]), catalog ? 'Catálogo del sitio' : 'Catálogo nuevo');
-});
 
 function updateSaveButton() {
   saveButton.disabled = publishing || !authorized || loadedVersion === null;
-}
-
-async function checkAccess() {
-  const button = document.querySelector('#check-access');
-  button.disabled = true;
-  try {
-    uid ??= await editorIdentity();
-    uidLabel.textContent = uid;
-    authorized = await canEditCatalog(uid);
-    access.hidden = authorized;
-    notice.hidden = true;
-    publishStatus.textContent = authorized ? 'Este navegador puede publicar.' : '';
-  } catch {
-    authorized = false;
-    notice.textContent = 'No se pudo verificar el acceso a Firebase. Revisa que Authentication anónimo esté activo y recarga el panel.';
-    notice.hidden = false;
-    access.hidden = !uid;
-  } finally {
-    button.disabled = false;
-    updateSaveButton();
-  }
 }
 
 async function syncCatalog(replace = false) {
@@ -321,30 +299,91 @@ async function syncCatalog(replace = false) {
   updateSaveButton();
 }
 
-document.querySelector('#check-access').addEventListener('click', async () => {
-  await checkAccess();
-  if (authorized && loadedVersion === null) {
-    try {
-      await syncCatalog();
-      if (loadedVersion === null) publishStatus.textContent = 'Recarga la versión pública antes de publicar.';
-    } catch {
-      publishStatus.textContent = 'No se pudo consultar el catálogo publicado.';
-    }
+async function openEditor(uid) {
+  if (!await canEditCatalog(uid)) {
+    await signOutEditor();
+    loginStatus.textContent = 'Tu cuenta aún no tiene permiso de administración.';
+    return;
   }
-});
-document.querySelector('#copy-uid').addEventListener('click', async () => {
+  authorized = true;
+  access.hidden = true;
+  editorNav.hidden = false;
+  logout.hidden = false;
+  const catalog = await bundle;
+  showCatalog(catalog ?? validateCatalog([]), catalog ? 'Catálogo del sitio' : 'Catálogo nuevo');
   try {
-    await navigator.clipboard.writeText(uid);
-    notice.textContent = 'ID copiado.';
-    notice.hidden = false;
+    await syncCatalog();
   } catch {
-    uidLabel.focus();
+    publishStatus.textContent = 'Firestore no respondió. Recarga el catálogo publicado para volver a intentar.';
+  }
+}
+
+function loginError(error) {
+  switch (error.code) {
+    case 'auth/invalid-credential':
+    case 'auth/invalid-login-credentials':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':
+    case 'auth/invalid-email':
+      return 'El usuario o la contraseña son incorrectos.';
+    case 'auth/too-many-requests':
+      return 'Hubo demasiados intentos. Espera un momento antes de volver a entrar.';
+    default:
+      return 'No se pudo acceder al panel. Revisa la conexión y la configuración de Firebase.';
+  }
+}
+
+async function startSession() {
+  if (!window.isSecureContext) {
+    document.querySelector('#https-required').hidden = false;
+    loginStatus.textContent = '';
+    return;
+  }
+  const button = login.querySelector('button');
+  button.disabled = true;
+  login.hidden = false;
+  try {
+    const uid = await editorIdentity();
+    loginStatus.textContent = '';
+    if (uid) await openEditor(uid);
+  } catch (error) {
+    loginStatus.textContent = loginError(error);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+login.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = login.querySelector('button');
+  if (button.disabled || !window.isSecureContext) return;
+  const password = login.elements.password;
+  button.disabled = true;
+  loginStatus.textContent = 'Iniciando sesión…';
+  try {
+    const uid = await signInEditor(login.elements.username.value, password.value);
+    await openEditor(uid);
+  } catch (error) {
+    loginStatus.textContent = loginError(error);
+  } finally {
+    password.value = '';
+    button.disabled = false;
   }
 });
-checkAccess();
-syncCatalog().catch(() => {
-  publishStatus.textContent = 'Firestore no respondió. Puedes exportar el catálogo mientras se restablece la conexión.';
+
+logout.addEventListener('click', async () => {
+  if (publishing || uploads || (dirty && !window.confirm('¿Cerrar sesión y descartar los cambios sin publicar?'))) return;
+  logout.disabled = true;
+  try {
+    await signOutEditor();
+    location.reload();
+  } catch {
+    publishStatus.textContent = 'No se pudo cerrar la sesión. Vuelve a intentarlo.';
+    logout.disabled = false;
+  }
 });
+
+startSession();
 form.addEventListener('input', (event) => {
   if (event.target.type === 'file' || event.target === search) return;
   dirty = true;
@@ -436,8 +475,7 @@ form.addEventListener('submit', async (event) => {
         if (error.code === 'catalog-conflict') loadedVersion = null;
         if (error.code === 'permission-denied') {
           authorized = false;
-          access.hidden = false;
-          throw new Error('Firebase rechazó el cambio. Verifica el acceso de este navegador y las reglas.');
+          throw new Error('Firebase rechazó el cambio. Revisa los permisos de tu cuenta y las reglas.');
         }
         throw error;
       }

@@ -12,12 +12,15 @@
   <header class="topbar">
     <div class="wrap topbar-inner">
       <a class="brand" href="../" aria-label="Iphone’s accesorios, inicio"><img src="../assets/logo-transparente.webp" alt="" width="420" height="260"></a>
-      <nav aria-label="Secciones del panel">
+      <nav id="editor-nav" aria-label="Secciones del panel" hidden>
         <a href="#resumen">Resumen</a>
         <a href="#productos">Productos</a>
         <a href="#archivos">Archivos</a>
       </nav>
-      <a class="back" href="../">Ver tienda</a>
+      <div class="session-actions">
+        <a class="back" href="../">Ver tienda</a>
+        <button id="logout" type="button" hidden>Cerrar sesión</button>
+      </div>
     </div>
   </header>
   <main class="wrap">
@@ -26,14 +29,19 @@
       <p>Gestiona el catálogo, la tasa del día y las existencias de tu tienda.</p>
     </header>
     <p id="notice" class="notice" role="status" hidden></p>
-    <section id="access" class="file-panel" hidden aria-labelledby="access-title">
-      <h2 id="access-title">Autorizar este navegador</h2>
-      <p>En Firestore, crea un documento en <code>administradores</code> con este ID. Después verifica el acceso.</p>
-      <p><code id="editor-uid" tabindex="0"></code></p>
-      <div class="actions">
-        <button type="button" id="copy-uid">Copiar ID</button>
-        <button type="button" id="check-access">Verificar acceso</button>
-      </div>
+    <section id="access" class="file-panel" aria-labelledby="access-title">
+      <h2 id="access-title">Iniciar sesión</h2>
+      <p id="login-status" role="status">Comprobando sesión…</p>
+      <p id="https-required" hidden>Abre <a href="https://iphoneaccesorios.dgp-link.com/admin/">el panel con HTTPS</a> antes de ingresar tu contraseña.</p>
+      <form id="login" method="post" hidden>
+        <label>Usuario
+          <input name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="32" required>
+        </label>
+        <label>Contraseña
+          <input name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <button class="primary" type="submit">Entrar al panel</button>
+      </form>
     </section>
     <form id="editor" hidden>
       <section id="resumen" class="overview" aria-labelledby="summary-title">
