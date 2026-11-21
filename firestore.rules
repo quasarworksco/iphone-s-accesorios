@@ -2,19 +2,11 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedInAsAdmin() {
+    function canPublish() {
       return request.auth != null
+        && request.auth.uid == 'UVr3eDskDAS7uP92wRVCknOlO252'
         && request.auth.token.firebase.sign_in_provider == 'password'
         && request.auth.token.email == 'admin@iphoneaccesorios.dgp-link.com';
-    }
-
-    function canPublish() {
-      return signedInAsAdmin()
-        && exists(/databases/$(database)/documents/administradores/$(request.auth.uid));
-    }
-
-    match /administradores/{uid} {
-      allow get: if signedInAsAdmin() && request.auth.uid == uid;
     }
 
     match /catalogo/publicado {

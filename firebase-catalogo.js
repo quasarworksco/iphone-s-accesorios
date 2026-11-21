@@ -8,6 +8,7 @@ const firebaseConfig = {
   appId: '1:654342708176:web:28cfc8d784540a8020b7d5'
 };
 
+const adminUid = 'UVr3eDskDAS7uP92wRVCknOlO252';
 const adminEmail = 'admin@iphoneaccesorios.dgp-link.com';
 
 let connection;
@@ -57,7 +58,9 @@ export async function editorIdentity() {
   const { auth, sdkAuth } = await editorAuth();
   if (!auth.currentUser) return null;
   const token = await auth.currentUser.getIdTokenResult();
-  if (token.signInProvider === 'password' && auth.currentUser.email === adminEmail) return auth.currentUser.uid;
+  if (token.signInProvider === 'password' && auth.currentUser.uid === adminUid && auth.currentUser.email === adminEmail) {
+    return auth.currentUser.uid;
+  }
   await sdkAuth.signOut(auth);
   return null;
 }
@@ -71,17 +74,18 @@ export async function signInEditor(username, password) {
   }
   const { auth, sdkAuth } = await editorAuth();
   const credential = await sdkAuth.signInWithEmailAndPassword(auth, adminEmail, password);
+  if (credential.user.uid !== adminUid || credential.user.email !== adminEmail) {
+    await sdkAuth.signOut(auth);
+    const error = new Error('Tu cuenta aún no tiene permiso de administración.');
+    error.code = 'editor/forbidden';
+    throw error;
+  }
   return credential.user.uid;
 }
 
 export async function signOutEditor() {
   const { auth, sdkAuth } = await editorAuth();
   await sdkAuth.signOut(auth);
-}
-
-export async function canEditCatalog(uid) {
-  const { db, firestore } = await openCatalog();
-  return (await firestore.getDocFromServer(firestore.doc(db, 'administradores', uid))).exists();
 }
 
 export async function saveCatalog(catalog, expectedVersion) {

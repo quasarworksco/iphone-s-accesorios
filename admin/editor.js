@@ -1,5 +1,5 @@
 import { bundledCatalog, categories, isCatalogImage, validateCatalog } from '../datos-catalogo.js';
-import { canEditCatalog, editorIdentity, readCatalog, saveCatalog, signInEditor, signOutEditor } from '../firebase-catalogo.js';
+import { editorIdentity, readCatalog, saveCatalog, signInEditor, signOutEditor } from '../firebase-catalogo.js';
 
 const form = document.querySelector('#editor');
 const list = document.querySelector('#products');
@@ -299,12 +299,7 @@ async function syncCatalog(replace = false) {
   updateSaveButton();
 }
 
-async function openEditor(uid) {
-  if (!await canEditCatalog(uid)) {
-    await signOutEditor();
-    loginStatus.textContent = 'Tu cuenta aún no tiene permiso de administración.';
-    return;
-  }
+async function openEditor() {
   authorized = true;
   access.hidden = true;
   editorNav.hidden = false;
@@ -320,6 +315,8 @@ async function openEditor(uid) {
 
 function loginError(error) {
   switch (error.code) {
+    case 'editor/forbidden':
+      return error.message;
     case 'auth/invalid-credential':
     case 'auth/invalid-login-credentials':
     case 'auth/wrong-password':
@@ -345,7 +342,7 @@ async function startSession() {
   try {
     const uid = await editorIdentity();
     loginStatus.textContent = '';
-    if (uid) await openEditor(uid);
+    if (uid) await openEditor();
   } catch (error) {
     loginStatus.textContent = loginError(error);
   } finally {
@@ -361,8 +358,8 @@ login.addEventListener('submit', async (event) => {
   button.disabled = true;
   loginStatus.textContent = 'Iniciando sesión…';
   try {
-    const uid = await signInEditor(login.elements.username.value, password.value);
-    await openEditor(uid);
+    await signInEditor(login.elements.username.value, password.value);
+    await openEditor();
   } catch (error) {
     loginStatus.textContent = loginError(error);
   } finally {
