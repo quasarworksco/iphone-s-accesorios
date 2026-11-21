@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Editar catálogo | Iphone’s accesorios</title>
+  <style>
+    @font-face { font-family: Manrope; src: url("../assets/fonts/manrope-latin-wght-normal.woff2") format("woff2"); font-weight: 400 800; font-display: swap; }
+    * { box-sizing: border-box; }
+    body { margin: auto; max-width: 62rem; padding: 2rem 1rem 4rem; color: #192126; background: #f6f7f8; font: 1rem/1.55 Manrope, system-ui, sans-serif; }
+    h1 { margin: .5rem 0; font-size: clamp(2rem, 6vw, 3.6rem); line-height: 1.1; letter-spacing: -.045em; }
+    a { color: #245750; }
+    .actions { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin-block: .9rem; }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button, .action { background: #fff; border: 1px solid #abbab9; padding: .5rem .85rem; min-height: 44px; border-radius: .55rem; cursor: pointer; }
+    button[type="submit"], #publish { background: #245750; color: #fff; border-color: #245750; }
+    button:disabled { opacity: .55; cursor: default; }
+    fieldset { min-inline-size: 0; margin: 0 0 1rem; border: 1px solid #abbab9; padding: 1rem; background: #fff; border-radius: .7rem; }
+    legend { font-weight: 800; padding-inline: .4rem; }
+    .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: .9rem; }
+    label { display: grid; align-content: start; gap: .3rem; }
+    input, select, textarea { min-height: 44px; min-width: 0; width: 100%; border: 1px solid #abbab9; border-radius: .4rem; background: #fff; padding: .5rem; }
+    textarea { resize: vertical; }
+    :focus-visible { outline: 2px solid #245750; outline-offset: 3px; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <a href="../">Volver a la tienda</a>
+  <h1>Editar catálogo</h1>
+  <p>Edita los productos y sus precios. Puedes descargar el catálogo para subirlo a GitHub o publicarlo con una cuenta de Google autorizada.</p>
+  <div class="actions">
+    <button type="button" id="sign-in">Conectar con Google</button>
+    <button type="button" id="sign-out" hidden>Cerrar sesión</button>
+    <a class="action" href="https://github.com/quasarworksco/iphone-s-accesorios/upload/main">Subir a GitHub</a>
+  </div>
+  <p id="connection" role="status"></p>
+  <label>Importar catálogo JSON <input type="file" id="import" accept=".json,application/json"></label>
+  <form id="editor" hidden>
+    <div id="products"></div>
+    <div class="actions">
+      <button type="button" id="add">Añadir producto</button>
+      <button type="submit">Descargar catálogo</button>
+      <button type="submit" id="publish" hidden>Publicar en la tienda</button>
+    </div>
+  </form>
+  <p id="status" role="status"></p>
+  <script type="module" src="editor.js"></script>
+</body>
+</html>

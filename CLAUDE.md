@@ -16,7 +16,6 @@ Haz estas preguntas **en un solo mensaje** y espera la respuesta. No inventes da
 - **Rubro / qué hace:** Somos una tienda que vende productos tecnologicos y de ves en cuando vendemos otras cosas
 - **Estilo visual:** Elegante / lujo
 - **Página de ejemplo:** https://gazellastors.vercel.app/,https://dgstoreve.vercel.app/
-- **Correo:** diegoegana606@gmail.com
 - **Teléfono / WhatsApp:** +58 412-3897248
 - **Redes sociales:** TikTok https://www.tiktok.com/@iphone_accesories2?_r=1&_t=ZS-9BZXJiTvBXY
 - **Idiomas:** Solo español
